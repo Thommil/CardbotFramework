@@ -1,4 +1,6 @@
 #include "CardBotFramework.h"
+#include "PlugComponent.h"
+#include "SocketComponent.h"
 #include "Bot.h"
 
 ABot::ABot()
@@ -10,8 +12,50 @@ void ABot::PreInitializeComponents()
 {
     Super::PreInitializeComponents();
     
+    //If edited in BluePrint, parse Parts
+    if(this->Parts.Num() == 0)
+    {
+        TArray <AActor*> childActors;
+        this->GetAllChildActors(childActors, false);
+        
+        //Search root
+        for(AActor* childActor : childActors)
+        {
+            if(!((ABotPart*)childActor)->HasPlugs()){
+                if(this->Parts.Num() == 0)
+                {
+                    this->Parts.Add((ABotPart*)childActor);
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Error, TEXT("Bot %s has several root Parts"), *(this->GetFName().ToString()));
+                    return;
+                }
+            }
+        }
+        
+        //Add other parts
+        if(this->Parts.Num() > 0)
+        {
+            for(AActor* childActor : childActors)
+            {
+                if(((ABotPart*)childActor)->HasPlugs()){
+                   this->Parts.Add((ABotPart*)childActor);
+                }
+            }
+        }
+    }
+        
     //Assemble parts
-    this->assemble();
+    if(this->Parts.Num() > 0)
+    {
+        this->assemblePart(*(this->Parts[0]));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Not root part found on Bot %s"), *(this->GetFName().ToString()));
+        return;
+    }
 }
 
 UActorComponent* ABot::GetComponentByName(FName name)
@@ -28,9 +72,46 @@ UActorComponent* ABot::GetComponentByName(FName name)
 
 void ABot::addPart(ABotPart* part)
 {
-    
+    //Set location & rotation
 }
 
+void ABot::assemblePart(ABotPart& part)
+{
+    //Only go from sockets to plugs
+    if(part.HasSockets())
+    {
+        TArray<USocketComponent*> sockets;
+        part.GetSockets(sockets);
+
+        //Parse sockets
+        for(USocketComponent* socket : sockets)
+        {
+            if(!socket->bConnected)
+            {
+                //Search among Parts the corresponding Plug
+                for(ABotPart* plugPart : this->Parts)
+                {
+                    UPlugComponent* plug = plugPart->GetPlug(socket->Name);
+                    if(plug != NULL && !plug->bConnected)
+                    {
+                        //Connect
+                        UActorComponent* socketBody = part.GetComponentByName(socket->ComponentName);
+                        UActorComponent* plugBody = plugPart->GetComponentByName(plug->ComponentName);
+                        if(socketBody != NULL && plugBody != NULL
+                           && socketBody->IsA(UPrimitiveComponent::StaticClass())
+                           && plugBody->IsA(UPrimitiveComponent::StaticClass()))
+                        {
+                            plug->SetConstrainedComponents((UPrimitiveComponent*)plugBody, NAME_None, (UPrimitiveComponent*)socketBody, NAME_None);
+                        }
+                        else{
+                            UE_LOG(LogTemp, Error, TEXT("Misconfigured Bot %s for socket %s"), *(this->GetFName().ToString()), *(socket->Name.ToString()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 void ABot::removePart(FName name)
 {
@@ -38,105 +119,6 @@ void ABot::removePart(FName name)
 }
 
 
-void ABot::assemble()
-{
-    this->Parts.Empty();
-    
-    /*// Check and set RootPart
-     UActorComponent* rootPartComponent = this->GetComponentByName(this->RootPartName);
-     if(rootPartComponent == NULL)
-     {
-     UE_LOG(LogTemp, Warning, TEXT("Root part not found, cannot assemble Bot"));
-     return;
-     }
-     if(!rootPartComponent->IsA(UChildActorComponent::StaticClass()))
-     {
-     UE_LOG(LogTemp, Warning, TEXT("Root part is not a UChildActorComponent, cannot assemble Bot"));
-     return;
-     }
-     if(!((UChildActorComponent*)rootPartComponent)->GetChildActor()->IsA(ABodyPart::StaticClass()))
-     {
-     UE_LOG(LogTemp, Warning, TEXT("Root part child Actor is not a ABodyPart, cannot assemble Bot"));
-     return;
-     }
-     this->RootPart = (ABodyPart*)((UChildActorComponent*)rootPartComponent)->GetChildActor();
-     
-     // Set All Parts
-     TArray<AActor*> childActors;
-     this->GetAllChildActors(childActors, false);
-     for(AActor* childActor : childActors)
-     {
-     if(childActor->IsA(ABodyPart::StaticClass()))
-     {
-     this->Parts.Add((ABodyPart*)childActor);
-     }
-     }
-     
-     // Assemble parts starting from RootPart
-     this->assemblePart(this->RootPart);*/
-}
-
-void ABot::disassemble()
-{
-    
-}
-
-void ABot::assemblePart(ABotPart& part)
-{
-    /*
-     //Parse sockets
-     for(FSocketConnector& socketConnector : part->Sockets)
-     {
-     //Parse all parts to find Plugs using this socket
-     for(ABodyPart* plugPart : this->Parts)
-     {
-     //Parse plugs
-     for(FPlugConnector& plugConnector : plugPart->Plugs)
-     {
-     //Part owning corresponding Plug found
-     if(plugConnector.SocketName == socketConnector.Name)
-     {
-     UActorComponent* plugComponent = plugPart->GetComponentByName(plugConnector.ComponentName);
-     //Plug is a PhysicsConstraintComponent -> Make a HingeJoint to socket parent
-     if(plugComponent == NULL)
-     {
-     UE_LOG(LogTemp, Warning, TEXT("Plug component not found"));
-     }
-     else if(plugComponent != NULL && plugComponent->IsA(UPhysicsConstraintComponent::StaticClass()))
-     {
-     //Look at socket position to place plug
-     UActorComponent* socketComponent = part->GetComponentByName(socketConnector.ComponentName);
-     if(socketComponent == NULL)
-     {
-     UE_LOG(LogTemp, Warning, TEXT("Socket component not found"));
-     }
-     else if(socketComponent != NULL && socketComponent->IsA(USceneComponent::StaticClass()))
-     {
-     FVector plugLocation =  ((USceneComponent*)socketComponent)->GetComponentLocation()
-     + plugPart->GetRootComponent()->GetComponentLocation()
-     - ((UPhysicsConstraintComponent*)plugComponent)->GetComponentLocation();
-     UE_LOG(LogTemp, Warning, TEXT("Joint %s"), *plugLocation.ToString());
-     plugPart->SetActorLocation(plugLocation);
-     UE_LOG(LogTemp, Warning, TEXT("Joint %s"), *((UPhysicsConstraintComponent*)plugComponent)->GetComponentLocation().ToString());
-     ((UPhysicsConstraintComponent*)plugComponent)->SetWorldLocation(((USceneComponent*)socketComponent)->GetComponentLocation());
-     UE_LOG(LogTemp, Warning, TEXT("Joint %s"), *((UPhysicsConstraintComponent*)plugComponent)->GetComponentLocation().ToString());
-     
-     }
-     else
-     {
-     UE_LOG(LogTemp, Warning, TEXT("Socket component not supported, must be a USceneComponent"));
-     }
-     
-     }
-     else
-     {
-     UE_LOG(LogTemp, Warning, TEXT("Plug component not supported, must be a UPhysicsConstraintComponent"));
-     }
-     }
-     }
-     }
-     }*/
-}
 
 void ABot::disassemblePart(ABotPart& part)
 {

@@ -18,17 +18,11 @@ public:
 	ABot();
 
 protected:
-
+    
     /** All parts */
     TArray<ABotPart*> Parts;
     
     virtual void PreInitializeComponents() override;
-    
-    /** Assemble parts (connect) based on sockets and plugs */
-    void assemble();
-    
-    /** Disassemble all Parts (disconnect) */
-    void disassemble();
     
     /** Recursive function to parse and assemble parts */
     void assemblePart(ABotPart &part);

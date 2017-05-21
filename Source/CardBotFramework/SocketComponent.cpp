@@ -6,5 +6,6 @@
 
 USocketComponent::USocketComponent()
 {
+    bConnected = false;
 	PrimaryComponentTick.bCanEverTick = false;
 }

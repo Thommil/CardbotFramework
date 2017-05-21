@@ -24,16 +24,28 @@ public:
     /** Helper to get a component from its name */
     UActorComponent* GetComponentByName(FName name);
 	
+    /** Indicates if Part has sockets */
+    inline bool HasSockets() { return this->FindComponentByClass(USocketComponent::StaticClass()) != NULL;}
+    
+    /** Get all sockets in a TArray */
+    void GetSockets(TArray<USocketComponent*>& sockets);
+    
+    /** Indicates if Part has plugs */
+    inline bool HasPlugs() { return this->FindComponentByClass(UPlugComponent::StaticClass()) != NULL;}
+    
     /** Get a socket by name */
     USocketComponent* GetSocket(FName name);
+    
+    /** Get all plugs in a TArray */
+    void GetPlugs(TArray<UPlugComponent*>& plugs);
     
     /** Get a plug by name */
     UPlugComponent* GetPlug(FName name);
     
-    /** Indicates if Part has sockets */
-    inline bool HasSockets() { return this->FindComponentByClass(USocketComponent::StaticClass()) != NULL;}
     
-    /** Indicates if Part has plugs */
-    inline bool HasPlugs() { return this->FindComponentByClass(UPlugComponent::StaticClass()) != NULL;}
+    
+    
+    
+    
 	
 };

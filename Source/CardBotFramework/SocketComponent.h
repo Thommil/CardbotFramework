@@ -18,6 +18,8 @@ public:
 
 public:	
 
+    bool bConnected;
+    
     /** Name/Function of this socket */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="connector")
     FName Name;

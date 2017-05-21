@@ -3,5 +3,6 @@
 
 UPlugComponent::UPlugComponent()
 {
+    bConnected = false;
     PrimaryComponentTick.bCanEverTick = false;
 }

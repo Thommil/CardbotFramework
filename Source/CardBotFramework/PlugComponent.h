@@ -18,7 +18,13 @@ public:
     
 public:
     
+    bool bConnected;
+    
     /** Name/Function of this plug */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="connector")
     FName Name;
+    
+    /** StaticMesh to connect */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="connector")
+    FName ComponentName;
 };  
