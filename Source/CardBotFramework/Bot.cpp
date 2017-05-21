@@ -116,7 +116,7 @@ void ABot::AssemblePart(ABotPart& part)
     }
 }
 
-void ABot::RemovePart(FName name, bool all)
+void ABot::RemovePart(ABotPart* part, bool all)
 {
     
 }

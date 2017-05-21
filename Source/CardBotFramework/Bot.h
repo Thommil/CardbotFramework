@@ -36,12 +36,10 @@ public:
     UFUNCTION(BlueprintCallable)
     void AddPart(ABotPart* part);
     
-    /** Remove a Part based on its connecting socket
-     *      > Remove all children too
-     *      > If assembled, disassemble safely first
+    /** Remove a Part, remove all children too, if assembled, disassemble safely first
      */
     UFUNCTION(BlueprintCallable)
-    void RemovePart(FName socketName, bool all = true);
+    void RemovePart(ABotPart* part, bool all = true);
     
     /** Break a socket or all sockets based on name.
      */
