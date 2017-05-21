@@ -25,23 +25,28 @@ protected:
     virtual void PreInitializeComponents() override;
     
     /** Recursive function to parse and assemble parts */
-    void assemblePart(ABotPart &part);
+    void AssemblePart(ABotPart &part);
     
     /** Recursive function to parse and disassemble parts */
-    void disassemblePart(ABotPart &part);
+    void DisassemblePart(ABotPart &part, bool recursive = false);
     
 public:	
 	
     /** Add a Part to the Bot (Not assembled now but transformed if needed) */
     UFUNCTION(BlueprintCallable)
-    void addPart(ABotPart* part);
+    void AddPart(ABotPart* part);
     
     /** Remove a Part based on its connecting socket
      *      > Remove all children too
      *      > If assembled, disassemble safely first
      */
     UFUNCTION(BlueprintCallable)
-    void removePart(FName socketName);
+    void RemovePart(FName socketName, bool all = true);
+    
+    /** Break a socket or all sockets based on name.
+     */
+    UFUNCTION(BlueprintCallable)
+    void BreakSocket(FName name, bool all = true, bool recursive = false);
     
     /** Helper to get a component from its name */
     UActorComponent* GetComponentByName(FName name);

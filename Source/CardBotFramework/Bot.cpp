@@ -49,7 +49,7 @@ void ABot::PreInitializeComponents()
     //Assemble parts
     if(this->Parts.Num() > 0)
     {
-        this->assemblePart(*(this->Parts[0]));
+        this->AssemblePart(*(this->Parts[0]));
     }
     else
     {
@@ -70,12 +70,12 @@ UActorComponent* ABot::GetComponentByName(FName name)
     return NULL;
 }
 
-void ABot::addPart(ABotPart* part)
+void ABot::AddPart(ABotPart* part)
 {
     //Set location & rotation
 }
 
-void ABot::assemblePart(ABotPart& part)
+void ABot::AssemblePart(ABotPart& part)
 {
     //Only go from sockets to plugs
     if(part.HasSockets())
@@ -102,6 +102,9 @@ void ABot::assemblePart(ABotPart& part)
                            && plugBody->IsA(UPrimitiveComponent::StaticClass()))
                         {
                             plug->SetConstrainedComponents((UPrimitiveComponent*)plugBody, NAME_None, (UPrimitiveComponent*)socketBody, NAME_None);
+                            plug->bConnected = true;
+                            socket->bConnected = true;
+                            this->AssemblePart(*plugPart);
                         }
                         else{
                             UE_LOG(LogTemp, Error, TEXT("Misconfigured Bot %s for socket %s"), *(this->GetFName().ToString()), *(socket->Name.ToString()));
@@ -113,14 +116,83 @@ void ABot::assemblePart(ABotPart& part)
     }
 }
 
-void ABot::removePart(FName name)
+void ABot::RemovePart(FName name, bool all)
 {
     
 }
 
 
-
-void ABot::disassemblePart(ABotPart& part)
+void ABot::DisassemblePart(ABotPart& part, bool recursive)
 {
-    
+    //Only go from sockets to plugs
+    if(part.HasSockets())
+    {
+        TArray<USocketComponent*> sockets;
+        part.GetSockets(sockets);
+        
+        //Parse sockets
+        for(USocketComponent* socket : sockets)
+        {
+            if(socket->bConnected)
+            {
+                //Search among Parts the corresponding Plug
+                for(ABotPart* plugPart : this->Parts)
+                {
+                    UPlugComponent* plug = plugPart->GetPlug(socket->Name);
+                    if(plug != NULL && !plug->bConnected)
+                    {
+                        //Disconnect
+                        plug->BreakConstraint();
+                        plug->bConnected = false;
+                        socket->bConnected = false;
+                        if(recursive)
+                        {
+                            this->DisassemblePart(*plugPart);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+void ABot::BreakSocket(FName name, bool all, bool recursive)
+{
+   for(ABotPart* part : this->Parts)
+   {
+       if(part->HasSockets())
+       {
+           TArray<USocketComponent*> sockets;
+           part->GetSockets(sockets);
+           
+           //Parse sockets
+           for(USocketComponent* socket : sockets)
+           {
+               if(socket->Name == name && socket->bConnected)
+               {
+                   //Search among Parts the corresponding Plug
+                   for(ABotPart* plugPart : this->Parts)
+                   {
+                       UPlugComponent* plug = plugPart->GetPlug(socket->Name);
+                       if(plug != NULL && plug->bConnected)
+                       {
+                           plug->BreakConstraint();
+                           plug->bConnected = false;
+                           socket->bConnected = false;
+                           if(recursive)
+                           {
+                               this->DisassemblePart(*plugPart);
+                           }
+                           if(!all){
+                               return;
+                           }
+                       }
+                   }
+               }
+               
+           }
+           
+       }
+   }
 }
