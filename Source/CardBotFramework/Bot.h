@@ -34,12 +34,12 @@ public:
 	
     /** Add a Part to the Bot (Not assembled now but transformed if needed) */
     UFUNCTION(BlueprintCallable)
-    void AddPart(ABotPart* part);
+    ABot* AddPart(TSubclassOf<ABotPart> partClass, FName name);
     
     /** Remove a Part, remove all children too, if assembled, disassemble safely first
      */
     UFUNCTION(BlueprintCallable)
-    void RemovePart(ABotPart* part, bool all = true);
+    ABot* RemovePart(ABotPart* part, bool all = true);
     
     /** Break a socket or all sockets based on name.
      */

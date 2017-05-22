@@ -5,7 +5,7 @@
 
 ABot::ABot()
 {
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 void ABot::PreInitializeComponents()
@@ -51,11 +51,6 @@ void ABot::PreInitializeComponents()
     {
         this->AssemblePart(*(this->Parts[0]));
     }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Not root part found on Bot %s"), *(this->GetFName().ToString()));
-        return;
-    }
 }
 
 UActorComponent* ABot::GetComponentByName(FName name)
@@ -70,9 +65,49 @@ UActorComponent* ABot::GetComponentByName(FName name)
     return NULL;
 }
 
-void ABot::AddPart(ABotPart* part)
+ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
 {
-    //Set location & rotation
+    bool bSuccess = false;
+    
+    //Create component
+    UChildActorComponent* childActorComponent = NewObject<UChildActorComponent>(this, name);
+    childActorComponent->SetChildActorClass(partClass);
+    childActorComponent->CreateChildActor();
+    ABotPart* part = (ABotPart*)childActorComponent->GetChildActor();
+    
+    //Root part
+    if(this->Parts.Num() == 0)
+    {
+        if(part->HasSockets() && !part->HasPlugs())
+        {
+            bSuccess = childActorComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Bot %s failed to add root part %s which is not adapted (must have sockets and no plugs)"), *(this->GetFName().ToString()), *(name.ToString()));
+        }
+    }
+    //Child parts
+    else
+    {
+        
+    }
+    
+    if(bSuccess)
+    {
+        this->Parts.Add(part);
+        childActorComponent->RegisterComponent();
+        childActorComponent->InitializeComponent();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to attach part %s to Bot %s"), *(name.ToString()), *(this->GetFName().ToString()));
+        childActorComponent->DestroyChildActor();
+        this->RemoveOwnedComponent(childActorComponent);
+        childActorComponent = NULL;
+    }
+        
+    return this;
 }
 
 void ABot::AssemblePart(ABotPart& part)
@@ -116,9 +151,9 @@ void ABot::AssemblePart(ABotPart& part)
     }
 }
 
-void ABot::RemovePart(ABotPart* part, bool all)
+ABot* ABot::RemovePart(ABotPart* part, bool all)
 {
-    
+    return this;
 }
 
 
