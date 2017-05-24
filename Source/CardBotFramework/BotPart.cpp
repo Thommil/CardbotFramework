@@ -7,6 +7,11 @@ ABotPart::ABotPart()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+void ABotPart::OnConstruction(const FTransform & Transform)
+{
+    INFO(TEXT("Touched"));
+}
+
 UActorComponent* ABotPart::GetComponentByName(FName name)
 {
     TSet<UActorComponent*> components = this->GetComponents();

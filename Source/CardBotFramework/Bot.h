@@ -33,20 +33,21 @@ protected:
 public:	
 	
     /** Add a Part to the Bot (Not assembled now but transformed if needed) */
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category="CardBot")
     ABot* AddPart(TSubclassOf<ABotPart> partClass, FName name);
     
     /** Remove a Part, remove all children too, if assembled, disassemble safely first
      */
-    UFUNCTION(BlueprintCallable)
-    ABot* RemovePart(ABotPart* part, bool all = true);
+    UFUNCTION(BlueprintCallable, Category="CardBot")
+    ABot* RemovePart(FName name, bool all = true);
     
     /** Break a socket or all sockets based on name.
      */
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category="CardBot")
     void BreakSocket(FName name, bool all = true, bool recursive = false);
     
     /** Helper to get a component from its name */
+    UFUNCTION(BlueprintCallable)
     UActorComponent* GetComponentByName(FName name);
 	
 };

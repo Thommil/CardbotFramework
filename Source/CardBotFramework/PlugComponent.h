@@ -16,15 +16,18 @@ public:
     
     UPlugComponent();
     
-public:
+protected:
     
+    /** Indicates if the current socket/plug pair is connected (physics)*/
     bool bConnected;
     
+public:
+    
     /** Name/Function of this plug */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="connector")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot")
     FName Name;
     
     /** StaticMesh to connect */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="connector")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot")
     FName ComponentName;
 };  
