@@ -19,9 +19,6 @@ public:
     
 protected:
     
-    /** Indicates if the current socket/plug pair is connected (physics)*/
-    bool bConnected;
-    
     /** The associated PlugComponent instance (indicates that assembly is done)*/
     UPlugComponent* Plug;
     
@@ -37,7 +34,7 @@ public:
     
     /** Reset the socket (disconnect) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void Reset() { bConnected = false; Plug = NULL;}
+    void Reset() {Plug = NULL;}
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
     void SetPlug(UPlugComponent* plug) { Plug = plug;}
@@ -62,9 +59,6 @@ public:
     
 protected:
     
-    /** Indicates if the current socket/plug pair is connected (physics)*/
-    bool bConnected;
-    
     /** The associated SocketComponent instance (indicates that assembly is done)*/
     USocketComponent* Socket;
     
@@ -80,7 +74,7 @@ public:
     
     /** Reset the plug (disconnect) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void Reset() { bConnected = false; Socket = NULL;}
+    void Reset() {Socket = NULL;}
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
     void SetSocket(USocketComponent* socket) { Socket = socket;}

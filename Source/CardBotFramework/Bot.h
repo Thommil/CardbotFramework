@@ -22,16 +22,21 @@ protected:
     /** The root part of the Bot */
     ABotPart* RootPart;
     
-//    virtual void PreInitializeComponents() override;
-    
     /** Recursive function to parse and assemble parts */
     bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = NULL);
 
     /** Recursive function to parse and disassemble parts */
     void DisassemblePart(ABotPart &part, TArray<ABotPart*> *parts = NULL);
     
+    /** Recursive function to break sockets constraint */
+    void BreakSocket(USocketComponent& socket, bool recursive = false);
+    
+    /** Try to parse all parts and build Bot instance (assemble/connect) */
+    bool Rebuild();
+    
 public:
     
+    UFUNCTION(BlueprintCallable)
     virtual void Reset() override;
 	
     /** Get all parts contained in the Actor, assembled or not */
@@ -50,13 +55,10 @@ public:
     /** Break a socket or all sockets based on name.
      */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void BreakSocket(FName name, bool all = true, bool recursive = false);
+    ABot* BreakSocket(FName name, bool all = true, bool recursive = false);
     
     /** Helper to get a component from its name */
     UFUNCTION(BlueprintCallable)
     UActorComponent* GetComponentByName(FName name) const;
-    
-    UFUNCTION(BlueprintCallable, Category="CardBot")
-    bool Rebuild();
     
 };

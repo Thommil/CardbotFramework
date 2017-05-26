@@ -3,7 +3,6 @@
 
 USocketComponent::USocketComponent()
 {
-    bConnected = false;
     Plug = NULL;
     PrimaryComponentTick.bCanEverTick = false;
 }
@@ -11,7 +10,8 @@ USocketComponent::USocketComponent()
 
 UPlugComponent::UPlugComponent()
 {
-    bConnected = false;
+
+    Socket = NULL;
     PrimaryComponentTick.bCanEverTick = false;
 }
 

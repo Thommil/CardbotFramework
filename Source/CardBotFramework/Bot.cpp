@@ -10,12 +10,8 @@ ABot::ABot()
 void ABot::Reset()
 {
     Super::Reset();
-    if(RootPart != NULL)
-    {
-        DisassemblePart(*RootPart);
-        RootPart = NULL;
-        Rebuild();
-    }
+    RootPart = NULL;
+    Rebuild();
 }
 
 UActorComponent* ABot::GetComponentByName(FName name) const
@@ -112,6 +108,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                         plug->SetConstrainedComponents((UPrimitiveComponent*)socketBody, NAME_None, (UPrimitiveComponent*)plugBody, NAME_None);
                         socket->SetPlug(plug);
                         plug->SetSocket(socket);
+                        break;
                     }
                     else{
                         ERROR(FString::Printf(TEXT("Bot %s failed to connect socket %s"), *(this->GetFName().ToString()), *(socket->Name.ToString())));
@@ -193,258 +190,62 @@ ABot* ABot::RemovePart(FName name)
     return this;
 }
 
-void ABot::BreakSocket(FName name, bool all, bool recursive)
+ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
 {
-    
+    if(RootPart != NULL)
+    {
+        TArray<ABotPart*> parts;
+        GetParts(parts);
+        
+        for(ABotPart *part : parts)
+        {
+            if(all)
+            {
+                TArray<USocketComponent*> sockets;
+                part->GetSockets(sockets);
+                
+                for(USocketComponent* socket : sockets)
+                {
+                    if(socket->Name == name)
+                    {
+                        BreakSocket(*socket, recursive);
+                    }
+                }
+            }
+            else
+            {
+                USocketComponent *socket = part->GetSocket(name);
+                if(socket != NULL)
+                {
+                    BreakSocket(*socket, recursive);
+                }
+            }
+        }
+    }
+    return this;
 }
 
-
-
-
-//ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
-//{
-
-//    //Create component and attach it (physics can be moved after creation)
-//    UChildActorComponent* childActorComponent = NewObject<UChildActorComponent>(this, name);
-//    childActorComponent->SetChildActorClass(partClass);
-//    
-//    if(childActorComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale))
-//    {
-//        //Create Actor
-//        childActorComponent->CreateChildActor();
-//        ABotPart* part = (ABotPart*)childActorComponent->GetChildActor();
-//        
-//        //Root part
-//        if(this->Parts.Num() == 0)
-//        {
-//            if(part->HasSockets() && !part->HasPlugs())
-//            {
-//                part->bAssembled = true;
-//                this->Parts.Add(part);
-//                childActorComponent->RegisterComponent();
-//                childActorComponent->InitializeComponent();
-//            }
-//            else
-//            {
-//                UE_LOG(LogTemp, Error, TEXT("Bot %s failed to add root part %s which is not adapted (must have sockets and no plugs)"), *(this->GetFName().ToString()), *(name.ToString()));
-//                part->bAssembled = false;
-//                childActorComponent->DestroyChildActor();
-//                this->RemoveOwnedComponent(childActorComponent);
-//                childActorComponent = NULL;
-//            }
-//        }
-//        //Other parts
-//        else
-//        {
-//            if(part->HasPlugs())
-//            {
-//                TArray<UPlugComponent*> plugs;
-//                part.GetPlugs(plugs);
-//                
-//                for(UPlugComponent* plug : plugs)
-//                    //Search among Parts the corresponding Socket for location
-//                    for(ABotPart* socketPart : this->Parts)
-//                    {
-//                        if(socketPart->bAssembled)
-//                        {
-//                            USocketComponent* socket = socketPart->GetSocket(plug.Name);
-//                            if(socket != NULL)
-//                            {
-//                                UActorComponent* plugBody = part.GetComponentByName(plug->ComponentName);
-//                                UActorComponent* socketBody = socketPart->GetComponentByName(socket->ComponentName);
-//                                if(socketBody != NULL && plugBody != NULL
-//                                   && socketBody->IsA(UPrimitiveComponent::StaticClass())
-//                                   && plugBody->IsA(UPrimitiveComponent::StaticClass()))
-//                                {
-//                            
-//                                    part->bAssembled = true;
-//                                    socketPart->bAssembled = true;
-//                                }
-//                                else{
-//                                    UE_LOG(LogTemp, Error, TEXT("Misconfigured Bot %s for socket %s"), *(this->GetFName().ToString()), *(socket->Name.ToString()));
-//                                }
-//                            //Connect
-//                            /*UActorComponent* socketBody = part.GetComponentByName(socket->ComponentName);
-//                             UActorComponent* plugBody = plugPart->GetComponentByName(plug->ComponentName);
-//                             if(socketBody != NULL && plugBody != NULL
-//                             && socketBody->IsA(UPrimitiveComponent::StaticClass())
-//                             && plugBody->IsA(UPrimitiveComponent::StaticClass()))
-//                             {
-//                             plug->SetConstrainedComponents((UPrimitiveComponent*)plugBody, NAME_None, (UPrimitiveComponent*)socketBody, NAME_None);
-//                             plug->bConnected = true;
-//                             socket->bConnected = true;
-//                             this->AssemblePart(*plugPart);
-//                             }
-//                             else{
-//                             UE_LOG(LogTemp, Error, TEXT("Misconfigured Bot %s for socket %s"), *(this->GetFName().ToString()), *(socket->Name.ToString()));
-//                             }*/
-//                            }
-//                        }
-//                    }
-//                }
-//            
-//                if(!part->bAssembled)
-//                {
-//                    UE_LOG(LogTemp, Warning, TEXT("Bot %s can't find plug/socket assembly for part %"), *(this->GetFName().ToString()), *(name.ToString()));
-//                }
-//            }
-//            else
-//            {
-//                UE_LOG(LogTemp, Error, TEXT("Bot %s failed to add part %s which is not adapted (must have plugs)"), *(this->GetFName().ToString()), *(name.ToString()));
-//                childActorComponent->DestroyChildActor();
-//                this->RemoveOwnedComponent(childActorComponent);
-//                childActorComponent = NULL;
-//            }
-//        }
-//        
-//    }
-//    else
-//    {
-//        UE_LOG(LogTemp, Error, TEXT("Failed to attach part %s to Bot %s"), *(name.ToString()), *(this->GetFName().ToString()));
-//        childActorComponent = NULL;
-//    }
-//    
-//    return this;
-//    
-//    //Create component
-//    //UChildActorComponent* childActorComponent = NewObject<UChildActorComponent>(this, name);
-//    //childActorComponent->SetChildActorClass(partClass);
-//    //childActorComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-//    //childActorComponent->CreateChildActor();
-//    
-//    
-//    /*//KO -> Physics too soon
-//    
-//    bool bSuccess = false;
-//    
-//    //Create component
-//    UChildActorComponent* childActorComponent = NewObject<UChildActorComponent>(this, name);
-//    childActorComponent->SetChildActorClass(partClass);
-//    childActorComponent->CreateChildActor();
-//    ABotPart* part = (ABotPart*)childActorComponent->GetChildActor();
-//    
-//    //Root part
-//    if(this->Parts.Num() == 0)
-//    {
-//        if(part->HasSockets() && !part->HasPlugs())
-//        {
-//            bSuccess = childActorComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-//        }
-//        else
-//        {
-//            UE_LOG(LogTemp, Error, TEXT("Bot %s failed to add root part %s which is not adapted (must have sockets and no plugs)"), *(this->GetFName().ToString()), *(name.ToString()));
-//        }
-//    }
-//    //Child parts
-//    else
-//    {
-//        
-//    }
-//    
-//    if(bSuccess)
-//    {
-//        this->Parts.Add(part);
-//        childActorComponent->RegisterComponent();
-//        childActorComponent->InitializeComponent();
-//    }
-//    else
-//    {
-//        UE_LOG(LogTemp, Error, TEXT("Failed to attach part %s to Bot %s"), *(name.ToString()), *(this->GetFName().ToString()));
-//        childActorComponent->DestroyChildActor();
-//        this->RemoveOwnedComponent(childActorComponent);
-//        childActorComponent = NULL;
-//    }
-//    */
-    
-//    return this;
-//}
-
-//void ABot::PreInitializeComponents()
-//{
-//    Super::PreInitializeComponents();
-
-//    //If edited in BluePrint, parse Parts
-//    if(this->Parts.Num() == 0)
-//    {
-//        TArray <AActor*> childActors;
-//        this->GetAllChildActors(childActors, false);
-//
-//        //Search root
-//        for(AActor* childActor : childActors)
-//        {
-//            if(!((ABotPart*)childActor)->HasPlugs()){
-//                if(this->Parts.Num() == 0)
-//                {
-//                    this->Parts.Add((ABotPart*)childActor);
-//                }
-//                else
-//                {
-//                    UE_LOG(LogTemp, Error, TEXT("Bot %s has several root Parts"), *(this->GetFName().ToString()));
-//                    return;
-//                }
-//            }
-//        }
-//
-//        //Add other parts
-//        if(this->Parts.Num() > 0)
-//        {
-//            for(AActor* childActor : childActors)
-//            {
-//                if(((ABotPart*)childActor)->HasPlugs()){
-//                   this->Parts.Add((ABotPart*)childActor);
-//                }
-//            }
-//        }
-//    }
-//
-//    //Assemble parts
-//    if(this->Parts.Num() > 0)
-//    {
-//        this->AssemblePart(*(this->Parts[0]));
-//    }
-//}
-
-//void ABot::AssemblePart(ABotPart& part)
-//{
-//    //Only go from sockets to plugs
-//    if(part.HasSockets())
-//    {
-//        TArray<USocketComponent*> sockets;
-//        part.GetSockets(sockets);
-//
-//        //Parse sockets
-//        for(USocketComponent* socket : sockets)
-//        {
-//            if(!socket->bConnected)
-//            {
-//                //Search among Parts the corresponding Plug
-//                for(ABotPart* plugPart : this->Parts)
-//                {
-//                    UPlugComponent* plug = plugPart->GetPlug(socket->Name);
-//                    if(plug != NULL && !plug->bConnected)
-//                    {
-//                        //Connect
-//                        UActorComponent* socketBody = part.GetComponentByName(socket->ComponentName);
-//                        UActorComponent* plugBody = plugPart->GetComponentByName(plug->ComponentName);
-//                        if(socketBody != NULL && plugBody != NULL
-//                           && socketBody->IsA(UPrimitiveComponent::StaticClass())
-//                           && plugBody->IsA(UPrimitiveComponent::StaticClass()))
-//                        {
-//                            plug->SetConstrainedComponents((UPrimitiveComponent*)plugBody, NAME_None, (UPrimitiveComponent*)socketBody, NAME_None);
-//                            plug->bConnected = true;
-//                            socket->bConnected = true;
-//                            this->AssemblePart(*plugPart);
-//                        }
-//                        else{
-//                            UE_LOG(LogTemp, Error, TEXT("Misconfigured Bot %s for socket %s"), *(this->GetFName().ToString()), *(socket->Name.ToString()));
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
+void ABot::BreakSocket(USocketComponent& socket, bool recursive)
+{
+    UPlugComponent *plug = socket.GetPlug();
+    if(plug != NULL)
+    {
+        if(recursive)
+        {
+            ABotPart* plugPart = (ABotPart*)plug->GetOwner();
+            TArray<USocketComponent*> childrenSockets;
+            plugPart->GetSockets(childrenSockets);
+            
+            for(USocketComponent* childrenSocket : childrenSockets)
+            {
+                BreakSocket(*childrenSocket, true);
+            }
+        }
+        plug->BreakConstraint();
+        plug->Reset();
+        socket.Reset();
+    }
+}
 
 
 //void ABot::DisassemblePart(ABotPart& part, bool recursive)
