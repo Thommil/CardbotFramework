@@ -1,18 +1,27 @@
 #include "CardBotFramework.h"
 #include "BotPart.h"
 
+USocketComponent::USocketComponent()
+{
+    bConnected = false;
+    Plug = NULL;
+    PrimaryComponentTick.bCanEverTick = false;
+}
+
+
+UPlugComponent::UPlugComponent()
+{
+    bConnected = false;
+    PrimaryComponentTick.bCanEverTick = false;
+}
+
 
 ABotPart::ABotPart()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void ABotPart::OnConstruction(const FTransform & Transform)
-{
-    INFO(TEXT("Touched"));
-}
-
-UActorComponent* ABotPart::GetComponentByName(FName name)
+UActorComponent* ABotPart::GetComponentByName(FName name) const
 {
     TSet<UActorComponent*> components = this->GetComponents();
     for (UActorComponent* component : components)
@@ -25,7 +34,7 @@ UActorComponent* ABotPart::GetComponentByName(FName name)
 }
 
 
-void ABotPart::GetSockets(TArray<USocketComponent*>& sockets)
+void ABotPart::GetSockets(TArray<USocketComponent*>& sockets) const
 {
     sockets.Empty();
     TSet<UActorComponent*> components = this->GetComponents();
@@ -38,7 +47,7 @@ void ABotPart::GetSockets(TArray<USocketComponent*>& sockets)
     }
 }
 
-USocketComponent* ABotPart::GetSocket(FName name)
+USocketComponent* ABotPart::GetSocket(FName name) const
 {
     TSet<UActorComponent*> components = this->GetComponents();
     for (UActorComponent* component : components)
@@ -51,7 +60,7 @@ USocketComponent* ABotPart::GetSocket(FName name)
     return NULL;
 }
 
-void ABotPart::GetPlugs(TArray<UPlugComponent*>& plugs)
+void ABotPart::GetPlugs(TArray<UPlugComponent*>& plugs) const
 {
     plugs.Empty();
     TSet<UActorComponent*> components = this->GetComponents();
@@ -65,7 +74,7 @@ void ABotPart::GetPlugs(TArray<UPlugComponent*>& plugs)
 }
 
 
-UPlugComponent* ABotPart::GetPlug(FName name)
+UPlugComponent* ABotPart::GetPlug(FName name) const
 {
     TSet<UActorComponent*> components = this->GetComponents();
     for (UActorComponent* component : components)

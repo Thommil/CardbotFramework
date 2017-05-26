@@ -16,22 +16,28 @@ class CARDBOTFRAMEWORK_API ABot : public AActor
 public:	
 
 	ABot();
-
+    
 protected:
     
-    /** All parts */
-    TArray<ABotPart*> Parts;
+    /** The root part of the Bot */
+    ABotPart* RootPart;
     
-    virtual void PreInitializeComponents() override;
+//    virtual void PreInitializeComponents() override;
     
     /** Recursive function to parse and assemble parts */
-    void AssemblePart(ABotPart &part);
-    
+    bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = NULL);
+
     /** Recursive function to parse and disassemble parts */
-    void DisassemblePart(ABotPart &part, bool recursive = false);
+    void DisassemblePart(ABotPart &part, TArray<ABotPart*> *parts = NULL);
     
-public:	
+public:
+    
+    virtual void Reset() override;
 	
+    /** Get all parts contained in the Actor, assembled or not */
+    UFUNCTION(BlueprintCallable, Category="CardBot")
+    void GetParts(TArray<ABotPart*>& parts) const;
+    
     /** Add a Part to the Bot (Not assembled now but transformed if needed) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
     ABot* AddPart(TSubclassOf<ABotPart> partClass, FName name);
@@ -39,7 +45,7 @@ public:
     /** Remove a Part, remove all children too, if assembled, disassemble safely first
      */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    ABot* RemovePart(FName name, bool all = true);
+    ABot* RemovePart(FName name);
     
     /** Break a socket or all sockets based on name.
      */
@@ -48,6 +54,9 @@ public:
     
     /** Helper to get a component from its name */
     UFUNCTION(BlueprintCallable)
-    UActorComponent* GetComponentByName(FName name);
-	
+    UActorComponent* GetComponentByName(FName name) const;
+    
+    UFUNCTION(BlueprintCallable, Category="CardBot")
+    bool Rebuild();
+    
 };
