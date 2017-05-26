@@ -10,6 +10,10 @@ ABot::ABot()
 void ABot::Reset()
 {
     Super::Reset();
+    if(RootPart != NULL)
+    {
+        DisassemblePart(*RootPart);
+    }
     RootPart = NULL;
     Rebuild();
 }
@@ -37,6 +41,20 @@ void ABot::GetParts(TArray<ABotPart*>& parts) const
             parts.Add((ABotPart*)((UChildActorComponent*)childActorComponent)->GetChildActor());
         }
     }
+}
+
+ABotPart* ABot::GetPart(FName name) const
+{
+    TArray<UActorComponent*> childActorComponents = GetComponentsByClass(UChildActorComponent::StaticClass());
+    for(UActorComponent* childActorComponent : childActorComponents)
+    {
+        if(((UChildActorComponent*)childActorComponent)->GetChildActor()->IsA(ABotPart::StaticClass())
+           &&childActorComponent->GetFName() == name)
+        {
+            return (ABotPart*)((UChildActorComponent*)childActorComponent)->GetChildActor();
+        }
+    }
+    return NULL;
 }
 
 bool ABot::Rebuild()
@@ -67,7 +85,15 @@ bool ABot::Rebuild()
         return false;
     }
 }
-               
+
+void ABot::DestroyPart(ABotPart &part)
+{
+    UChildActorComponent* component = part.GetParentComponent();
+    component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    component->DestroyChildActor();
+    component->DestroyComponent();
+}
+
 bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
 {
     //Optim
@@ -80,7 +106,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
     
     TArray<USocketComponent*> sockets;
     part.GetSockets(sockets);
-    
+
     //Parse all sockets to find not assembled ones
     for(USocketComponent* socket : sockets)
     {
@@ -148,9 +174,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
             else
             {
                 ERROR(FString::Printf(TEXT("Bot %s failed to add root part %s which is not adapted (must have sockets and no plugs)"), *(this->GetFName().ToString()), *(name.ToString())));
-                childActorComponent->DestroyChildActor();
-                RemoveOwnedComponent(childActorComponent);
-                childActorComponent = NULL;
+                DestroyPart(*part);
                 return this;
             }
         }
@@ -164,9 +188,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
         else
         {
             ERROR(FString::Printf(TEXT("Failed to Rebuild Bot %s when adding part %s"), *(this->GetFName().ToString()), *(name.ToString())));
-            childActorComponent->DestroyChildActor();
-            RemoveOwnedComponent(childActorComponent);
-            childActorComponent = NULL;
+            DestroyPart(*part);
         }
     }
     else
@@ -179,14 +201,48 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
     return this;
 }
 
-void ABot::DisassemblePart(ABotPart& part, TArray<ABotPart*> *parts)
+void ABot::DisassemblePart(ABotPart& part)
 {
+    TArray<USocketComponent*> sockets;
+    part.GetSockets(sockets);
     
+    for(USocketComponent* socket : sockets)
+    {
+        BreakSocket(*socket, false, true);
+    }
 }
 
 
 ABot* ABot::RemovePart(FName name)
 {
+    ABotPart* part = GetPart(name);
+    if(part != NULL)
+    {
+        TArray<USocketComponent*> sockets;
+        part->GetSockets(sockets);
+        
+        for(USocketComponent* socket : sockets)
+        {
+            BreakSocket(*socket, true, true);
+        }
+        
+        TArray<UPlugComponent*> plugs;
+        part->GetPlugs(plugs);
+        
+        for(UPlugComponent* plug : plugs)
+        {
+            if(plug->GetSocket() != NULL)
+            {
+                BreakSocket(*(plug->GetSocket()), false, false);
+            }
+        }
+        
+        if(RootPart == part)
+        {
+            RootPart = NULL;
+        }
+        DestroyPart(*part);
+    }
     return this;
 }
 
@@ -208,7 +264,7 @@ ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
                 {
                     if(socket->Name == name)
                     {
-                        BreakSocket(*socket, recursive);
+                        BreakSocket(*socket, false, recursive);
                     }
                 }
             }
@@ -217,7 +273,7 @@ ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
                 USocketComponent *socket = part->GetSocket(name);
                 if(socket != NULL)
                 {
-                    BreakSocket(*socket, recursive);
+                    BreakSocket(*socket, false, recursive);
                 }
             }
         }
@@ -225,100 +281,31 @@ ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
     return this;
 }
 
-void ABot::BreakSocket(USocketComponent& socket, bool recursive)
+void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursive)
 {
     UPlugComponent *plug = socket.GetPlug();
     if(plug != NULL)
     {
+
+        ABotPart* plugPart = (ABotPart*)plug->GetOwner();
         if(recursive)
         {
-            ABotPart* plugPart = (ABotPart*)plug->GetOwner();
             TArray<USocketComponent*> childrenSockets;
             plugPart->GetSockets(childrenSockets);
             
             for(USocketComponent* childrenSocket : childrenSockets)
             {
-                BreakSocket(*childrenSocket, true);
+                BreakSocket(*childrenSocket, destroyChild);
             }
         }
         plug->BreakConstraint();
+        plug->TermComponentConstraint();
         plug->Reset();
         socket.Reset();
+        
+        if(destroyChild)
+        {
+            DestroyPart(*plugPart);
+        }
     }
 }
-
-
-//void ABot::DisassemblePart(ABotPart& part, bool recursive)
-//{
-//    //Only go from sockets to plugs
-//    if(part.HasSockets())
-//    {
-//        TArray<USocketComponent*> sockets;
-//        part.GetSockets(sockets);
-//        
-//        //Parse sockets
-//        for(USocketComponent* socket : sockets)
-//        {
-//            if(socket->bConnected)
-//            {
-//                //Search among Parts the corresponding Plug
-//                for(ABotPart* plugPart : this->Parts)
-//                {
-//                    UPlugComponent* plug = plugPart->GetPlug(socket->Name);
-//                    if(plug != NULL && !plug->bConnected)
-//                    {
-//                        //Disconnect
-//                        plug->BreakConstraint();
-//                        plug->bConnected = false;
-//                        socket->bConnected = false;
-//                        if(recursive)
-//                        {
-//                            this->DisassemblePart(*plugPart);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//    }
-//}
-
-//void ABot::BreakSocket(FName name, bool all, bool recursive)
-//{
-//   for(ABotPart* part : this->Parts)
-//   {
-//       if(part->HasSockets())
-//       {
-//           TArray<USocketComponent*> sockets;
-//           part->GetSockets(sockets);
-//           
-//           //Parse sockets
-//           for(USocketComponent* socket : sockets)
-//           {
-//               if(socket->Name == name && socket->bConnected)
-//               {
-//                   //Search among Parts the corresponding Plug
-//                   for(ABotPart* plugPart : this->Parts)
-//                   {
-//                       UPlugComponent* plug = plugPart->GetPlug(socket->Name);
-//                       if(plug != NULL && plug->bConnected)
-//                       {
-//                           plug->BreakConstraint();
-//                           plug->bConnected = false;
-//                           socket->bConnected = false;
-//                           if(recursive)
-//                           {
-//                               this->DisassemblePart(*plugPart);
-//                           }
-//                           if(!all){
-//                               return;
-//                           }
-//                       }
-//                   }
-//               }
-//               
-//           }
-//           
-//       }
-//   }
-//}

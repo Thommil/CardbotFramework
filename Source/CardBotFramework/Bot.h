@@ -26,10 +26,13 @@ protected:
     bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = NULL);
 
     /** Recursive function to parse and disassemble parts */
-    void DisassemblePart(ABotPart &part, TArray<ABotPart*> *parts = NULL);
+    void DisassemblePart(ABotPart &part);
+    
+    /** Destroy a part properly */
+    void DestroyPart(ABotPart &part);
     
     /** Recursive function to break sockets constraint */
-    void BreakSocket(USocketComponent& socket, bool recursive = false);
+    void BreakSocket(USocketComponent& socket, bool destroyChild = false, bool recursive = false);
     
     /** Try to parse all parts and build Bot instance (assemble/connect) */
     bool Rebuild();
@@ -42,6 +45,10 @@ public:
     /** Get all parts contained in the Actor, assembled or not */
     UFUNCTION(BlueprintCallable, Category="CardBot")
     void GetParts(TArray<ABotPart*>& parts) const;
+    
+    /** Get all part from its name, assembled or not  */
+    UFUNCTION(BlueprintCallable, Category="CardBot")
+    ABotPart* GetPart(FName name) const;
     
     /** Add a Part to the Bot (Not assembled now but transformed if needed) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
