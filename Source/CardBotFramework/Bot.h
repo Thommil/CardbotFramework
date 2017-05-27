@@ -68,4 +68,14 @@ public:
     UFUNCTION(BlueprintCallable)
     UActorComponent* GetComponentByName(FName name) const;
     
+    /** Called after a BotPart has been added */
+    UFUNCTION(BlueprintNativeEvent)
+    void OnPartAdded(ABotPart* part);
+    virtual void OnPartAdded_Implementation(ABotPart* part){}
+    
+    /** Called after a BotPart has been removed */
+    UFUNCTION(BlueprintNativeEvent)
+    void OnPartRemoved(ABotPart* part);
+    virtual void OnPartRemoved_Implementation(ABotPart* part){}
+    
 };

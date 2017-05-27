@@ -127,4 +127,24 @@ public:
     /** Get a plug by name */
     UFUNCTION(BlueprintCallable, Category="CardBot")
     UPlugComponent* GetPlug(FName name) const;
+    
+    /** Called after a connection to a owned socket has been made */
+    UFUNCTION(BlueprintNativeEvent)
+    void OnSocketConnected(USocketComponent *socket);
+    virtual void OnSocketConnected_Implementation(USocketComponent *socket){}
+    
+    /** Called after a connection to a owned socket has been borken */
+    UFUNCTION(BlueprintNativeEvent)
+    void OnSocketBroken(USocketComponent *socket);
+    virtual void OnSocketBroken_Implementation(USocketComponent *socket){}
+    
+    /** Called after a connection to a owned plug has been made */
+    UFUNCTION(BlueprintNativeEvent)
+    void OnPlugConnected(UPlugComponent *plug);
+    virtual void OnPlugConnected_Implementation(UPlugComponent *plug){}
+    
+    /** Called after a connection to a owned plug has been borken */
+    UFUNCTION(BlueprintNativeEvent)
+    void OnPlugBroken(UPlugComponent *plug);
+    virtual void OnPlugBroken_Implementation(UPlugComponent *plug){}
 };

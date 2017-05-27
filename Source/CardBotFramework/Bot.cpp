@@ -92,6 +92,7 @@ void ABot::DestroyPart(ABotPart &part)
     component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
     component->DestroyChildActor();
     component->DestroyComponent();
+    OnPartRemoved(&part);
 }
 
 bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
@@ -134,6 +135,8 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                         plug->SetConstrainedComponents((UPrimitiveComponent*)socketBody, NAME_None, (UPrimitiveComponent*)plugBody, NAME_None);
                         socket->SetPlug(plug);
                         plug->SetSocket(socket);
+                        part.OnSocketConnected(socket);
+                        plugPart->OnPlugConnected(plug);
                         break;
                     }
                     else{
@@ -184,6 +187,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
         {
             childActorComponent->RegisterComponent();
             childActorComponent->InitializeComponent();
+            OnPartAdded(part);
         }
         else
         {
@@ -288,6 +292,7 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
     {
 
         ABotPart* plugPart = (ABotPart*)plug->GetOwner();
+        ABotPart* socketPart = (ABotPart*)socket.GetOwner();
         if(recursive)
         {
             TArray<USocketComponent*> childrenSockets;
@@ -302,6 +307,8 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         plug->TermComponentConstraint();
         plug->Reset();
         socket.Reset();
+        socketPart->OnSocketConnected(&socket);
+        plugPart->OnPlugBroken(plug);
         
         if(destroyChild)
         {
