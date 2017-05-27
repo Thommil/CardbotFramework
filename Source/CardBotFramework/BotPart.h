@@ -34,7 +34,7 @@ public:
     
     /** Reset the socket (disconnect) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void Reset() {Plug = NULL;}
+    void Reset() {Plug = nullptr;}
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
     void SetPlug(UPlugComponent* plug) { Plug = plug;}
@@ -74,7 +74,7 @@ public:
     
     /** Reset the plug (disconnect) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void Reset() {Socket = NULL;}
+    void Reset() {Socket = nullptr;}
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
     void SetSocket(USocketComponent* socket) { Socket = socket;}
@@ -106,7 +106,7 @@ public:
 	
     /** Indicates if Part has sockets */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    inline bool HasSockets() const { return this->FindComponentByClass(USocketComponent::StaticClass()) != NULL;}
+    inline bool HasSockets() const { return this->FindComponentByClass(USocketComponent::StaticClass()) != nullptr;}
     
     /** Get all sockets in a TArray */
     UFUNCTION(BlueprintCallable, Category="CardBot")
@@ -114,7 +114,7 @@ public:
     
     /** Indicates if Part has plugs */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    bool HasPlugs() const { return this->FindComponentByClass(UPlugComponent::StaticClass()) != NULL;}
+    bool HasPlugs() const { return this->FindComponentByClass(UPlugComponent::StaticClass()) != nullptr;}
     
     /** Get a socket by name */
     UFUNCTION(BlueprintCallable, Category="CardBot")
@@ -129,22 +129,22 @@ public:
     UPlugComponent* GetPlug(FName name) const;
     
     /** Called after a connection to a owned socket has been made */
-    UFUNCTION(BlueprintNativeEvent)
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketConnected(USocketComponent *socket);
     virtual void OnSocketConnected_Implementation(USocketComponent *socket){}
     
     /** Called after a connection to a owned socket has been borken */
-    UFUNCTION(BlueprintNativeEvent)
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketBroken(USocketComponent *socket);
     virtual void OnSocketBroken_Implementation(USocketComponent *socket){}
     
     /** Called after a connection to a owned plug has been made */
-    UFUNCTION(BlueprintNativeEvent)
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugConnected(UPlugComponent *plug);
     virtual void OnPlugConnected_Implementation(UPlugComponent *plug){}
     
     /** Called after a connection to a owned plug has been borken */
-    UFUNCTION(BlueprintNativeEvent)
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugBroken(UPlugComponent *plug);
     virtual void OnPlugBroken_Implementation(UPlugComponent *plug){}
 };

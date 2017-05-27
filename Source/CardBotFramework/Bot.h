@@ -2,6 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "BotPart.h"
+#include "Moveable.h"
 #include "Bot.generated.h"
 
 /**
@@ -9,7 +10,7 @@
  *      - made of BotPart Actors -> assemble/connect based on plugs and sockets
  */
 UCLASS()
-class CARDBOTFRAMEWORK_API ABot : public AActor
+class CARDBOTFRAMEWORK_API ABot : public AActor, public IMoveable
 {
 	GENERATED_BODY()
 	
@@ -23,7 +24,7 @@ protected:
     ABotPart* RootPart;
     
     /** Recursive function to parse and assemble parts */
-    bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = NULL);
+    bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = nullptr);
 
     /** Recursive function to parse and disassemble parts */
     void DisassemblePart(ABotPart &part);
@@ -69,13 +70,18 @@ public:
     UActorComponent* GetComponentByName(FName name) const;
     
     /** Called after a BotPart has been added */
-    UFUNCTION(BlueprintNativeEvent)
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPartAdded(ABotPart* part);
     virtual void OnPartAdded_Implementation(ABotPart* part){}
     
     /** Called after a BotPart has been removed */
-    UFUNCTION(BlueprintNativeEvent)
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPartRemoved(ABotPart* part);
     virtual void OnPartRemoved_Implementation(ABotPart* part){}
     
+    
+    virtual float SetSpeed_Implementation(float speedRate) override  {return 0;};
+    
+    virtual float GetSpeed_Implementation() override {return 0;};
+
 };

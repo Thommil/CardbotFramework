@@ -3,18 +3,18 @@
 
 ABot::ABot()
 {
-    RootPart = NULL;
+    RootPart = nullptr;
     PrimaryActorTick.bCanEverTick = true;
 }
 
 void ABot::Reset()
 {
     Super::Reset();
-    if(RootPart != NULL)
+    if(RootPart != nullptr)
     {
         DisassemblePart(*RootPart);
     }
-    RootPart = NULL;
+    RootPart = nullptr;
     Rebuild();
 }
 
@@ -27,7 +27,7 @@ UActorComponent* ABot::GetComponentByName(FName name) const
             return component;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void ABot::GetParts(TArray<ABotPart*>& parts) const
@@ -54,7 +54,7 @@ ABotPart* ABot::GetPart(FName name) const
             return (ABotPart*)((UChildActorComponent*)childActorComponent)->GetChildActor();
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 bool ABot::Rebuild()
@@ -64,18 +64,18 @@ bool ABot::Rebuild()
     GetParts(parts);
     
     //First if RootPart is not set, seek one
-    if(RootPart == NULL)
+    if(RootPart == nullptr)
     {
         for(ABotPart* part : parts)
         {
-            if(RootPart == NULL && part->HasSockets() && !part->HasPlugs())
+            if(RootPart == nullptr && part->HasSockets() && !part->HasPlugs())
             {
                 RootPart = part;
             }
         }
     }
     
-    if(RootPart != NULL)
+    if(RootPart != nullptr)
     {
         return AssemblePart(*RootPart, &parts);
     }
@@ -98,7 +98,7 @@ void ABot::DestroyPart(ABotPart &part)
 bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
 {
     //Optim
-    if(parts == NULL)
+    if(parts == nullptr)
     {
         TArray<ABotPart*> _parts;
         GetParts(_parts);
@@ -111,12 +111,12 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
     //Parse all sockets to find not assembled ones
     for(USocketComponent* socket : sockets)
     {
-        if(socket->GetPlug() == NULL)
+        if(socket->GetPlug() == nullptr)
         {
             for(ABotPart* plugPart : *parts)
             {
                 UPlugComponent* plug = plugPart->GetPlug(socket->Name);
-                if(plug != NULL && plug->GetSocket() == NULL)
+                if(plug != nullptr && plug->GetSocket() == nullptr)
                 {
                     //Runtime, place -> component and actor directly
                     if(!plugPart->GetParentComponent()->IsCreatedByConstructionScript())
@@ -128,7 +128,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                     //Connect Joint
                     UActorComponent* socketBody = part.GetComponentByName(socket->ComponentName);
                     UActorComponent* plugBody = plugPart->GetComponentByName(plug->ComponentName);
-                    if(socketBody != NULL && plugBody != NULL
+                    if(socketBody != nullptr && plugBody != nullptr
                        && socketBody->IsA(UPrimitiveComponent::StaticClass())
                        && plugBody->IsA(UPrimitiveComponent::StaticClass()))
                     {
@@ -146,7 +146,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                 }
             }
         }
-        if(socket->GetPlug() != NULL && !AssemblePart(*(ABotPart*)(socket->GetPlug()->GetOwner()), parts))
+        if(socket->GetPlug() != nullptr && !AssemblePart(*(ABotPart*)(socket->GetPlug()->GetOwner()), parts))
         {
             return false;
         }
@@ -168,7 +168,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
         ABotPart* part = (ABotPart*)childActorComponent->GetChildActor();
         
         //No RootPart --> Added part must be of RootPart type (no plugs)
-        if(RootPart == NULL)
+        if(RootPart == nullptr)
         {
             if(part->HasSockets() && !part->HasPlugs())
             {
@@ -198,7 +198,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
     else
     {
         ERROR(FString::Printf(TEXT("Failed to attach part %s to Bot %s"), *(name.ToString()), *(this->GetFName().ToString())));
-        childActorComponent = NULL;
+        childActorComponent = nullptr;
 
     }
 
@@ -220,7 +220,7 @@ void ABot::DisassemblePart(ABotPart& part)
 ABot* ABot::RemovePart(FName name)
 {
     ABotPart* part = GetPart(name);
-    if(part != NULL)
+    if(part != nullptr)
     {
         TArray<USocketComponent*> sockets;
         part->GetSockets(sockets);
@@ -235,7 +235,7 @@ ABot* ABot::RemovePart(FName name)
         
         for(UPlugComponent* plug : plugs)
         {
-            if(plug->GetSocket() != NULL)
+            if(plug->GetSocket() != nullptr)
             {
                 BreakSocket(*(plug->GetSocket()), false, false);
             }
@@ -243,7 +243,7 @@ ABot* ABot::RemovePart(FName name)
         
         if(RootPart == part)
         {
-            RootPart = NULL;
+            RootPart = nullptr;
         }
         DestroyPart(*part);
     }
@@ -252,7 +252,7 @@ ABot* ABot::RemovePart(FName name)
 
 ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
 {
-    if(RootPart != NULL)
+    if(RootPart != nullptr)
     {
         TArray<ABotPart*> parts;
         GetParts(parts);
@@ -275,7 +275,7 @@ ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
             else
             {
                 USocketComponent *socket = part->GetSocket(name);
-                if(socket != NULL)
+                if(socket != nullptr)
                 {
                     BreakSocket(*socket, false, recursive);
                 }
@@ -288,7 +288,7 @@ ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
 void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursive)
 {
     UPlugComponent *plug = socket.GetPlug();
-    if(plug != NULL)
+    if(plug != nullptr)
     {
 
         ABotPart* plugPart = (ABotPart*)plug->GetOwner();
@@ -307,7 +307,7 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         plug->TermComponentConstraint();
         plug->Reset();
         socket.Reset();
-        socketPart->OnSocketConnected(&socket);
+        socketPart->OnSocketBroken(&socket);
         plugPart->OnPlugBroken(plug);
         
         if(destroyChild)

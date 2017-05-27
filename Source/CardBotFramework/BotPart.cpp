@@ -3,7 +3,7 @@
 
 USocketComponent::USocketComponent()
 {
-    Plug = NULL;
+    Plug = nullptr;
     PrimaryComponentTick.bCanEverTick = false;
 }
 
@@ -11,7 +11,7 @@ USocketComponent::USocketComponent()
 UPlugComponent::UPlugComponent()
 {
 
-    Socket = NULL;
+    Socket = nullptr;
     PrimaryComponentTick.bCanEverTick = false;
 }
 
@@ -30,7 +30,7 @@ UActorComponent* ABotPart::GetComponentByName(FName name) const
             return component;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -57,7 +57,7 @@ USocketComponent* ABotPart::GetSocket(FName name) const
             return (USocketComponent*)component;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void ABotPart::GetPlugs(TArray<UPlugComponent*>& plugs) const
@@ -84,6 +84,5 @@ UPlugComponent* ABotPart::GetPlug(FName name) const
             return (UPlugComponent*)component;
         }
     }
-    return NULL;
+    return nullptr;
 }
-
