@@ -34,13 +34,13 @@ public:
     
     /** Reset the socket (disconnect) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void Reset() {Plug = nullptr;}
+    void Reset();
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void SetPlug(UPlugComponent* plug) { Plug = plug;}
+    void SetPlug(UPlugComponent* plug);
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    UPlugComponent* GetPlug() { return Plug;}
+    UPlugComponent* GetPlug();
     
 };
 
@@ -74,13 +74,13 @@ public:
     
     /** Reset the plug (disconnect) */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void Reset() {Socket = nullptr;}
+    void Reset();
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void SetSocket(USocketComponent* socket) { Socket = socket;}
+    void SetSocket(USocketComponent* socket);
     
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    USocketComponent* GetSocket() { return Socket;}
+    USocketComponent* GetSocket();
 };
 
 /**

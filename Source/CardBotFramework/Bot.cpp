@@ -36,9 +36,9 @@ void ABot::GetParts(TArray<ABotPart*>& parts) const
     TArray<UActorComponent*> childActorComponents = GetComponentsByClass(UChildActorComponent::StaticClass());
     for(UActorComponent* childActorComponent : childActorComponents)
     {
-        if(((UChildActorComponent*)childActorComponent)->GetChildActor()->IsA(ABotPart::StaticClass()))
+        if(static_cast<UChildActorComponent *>(childActorComponent)->GetChildActor()->IsA(ABotPart::StaticClass()))
         {
-            parts.Add((ABotPart*)((UChildActorComponent*)childActorComponent)->GetChildActor());
+            parts.Add(static_cast<ABotPart *>(static_cast<UChildActorComponent *>(childActorComponent)->GetChildActor()));
         }
     }
 }
@@ -48,10 +48,9 @@ ABotPart* ABot::GetPart(FName name) const
     TArray<UActorComponent*> childActorComponents = GetComponentsByClass(UChildActorComponent::StaticClass());
     for(UActorComponent* childActorComponent : childActorComponents)
     {
-        if(((UChildActorComponent*)childActorComponent)->GetChildActor()->IsA(ABotPart::StaticClass())
-           &&childActorComponent->GetFName() == name)
+        if(static_cast<UChildActorComponent *>(childActorComponent)->GetChildActor()->IsA(ABotPart::StaticClass()) && childActorComponent->GetFName() == name)
         {
-            return (ABotPart*)((UChildActorComponent*)childActorComponent)->GetChildActor();
+            return static_cast<ABotPart *>(static_cast<UChildActorComponent *>(childActorComponent)->GetChildActor());
         }
     }
     return nullptr;
@@ -125,28 +124,16 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                         plugPart->SetActorLocation(GetActorLocation() + socket->GetComponentLocation() - plug->GetComponentLocation());
                     }
                     
-                    //Connect Joint
-                    UActorComponent* socketBody = part.GetComponentByName(socket->ComponentName);
-                    UActorComponent* plugBody = plugPart->GetComponentByName(plug->ComponentName);
-                    if(socketBody != nullptr && plugBody != nullptr
-                       && socketBody->IsA(UPrimitiveComponent::StaticClass())
-                       && plugBody->IsA(UPrimitiveComponent::StaticClass()))
-                    {
-                        plug->SetConstrainedComponents((UPrimitiveComponent*)socketBody, NAME_None, (UPrimitiveComponent*)plugBody, NAME_None);
-                        socket->SetPlug(plug);
-                        plug->SetSocket(socket);
-                        part.OnSocketConnected(socket);
-                        plugPart->OnPlugConnected(plug);
-                        break;
-                    }
-                    else{
-                        ERROR(FString::Printf(TEXT("Bot %s failed to connect socket %s"), *(this->GetFName().ToString()), *(socket->Name.ToString())));
-                        return false;
-                    }
+                    //Connect
+                    socket->SetPlug(plug);
+                    plug->SetSocket(socket);
+                    part.OnSocketConnected(socket);
+                    plugPart->OnPlugConnected(plug);
+                    break;
                 }
             }
         }
-        if(socket->GetPlug() != nullptr && !AssemblePart(*(ABotPart*)(socket->GetPlug()->GetOwner()), parts))
+        if(socket->GetPlug() != nullptr && !AssemblePart(*static_cast<ABotPart *>(socket->GetPlug()->GetOwner()), parts))
         {
             return false;
         }
@@ -165,7 +152,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
     {
         //Create Actor
         childActorComponent->CreateChildActor();
-        ABotPart* part = (ABotPart*)childActorComponent->GetChildActor();
+        ABotPart* part = static_cast<ABotPart *>(childActorComponent->GetChildActor());
         
         //No RootPart --> Added part must be of RootPart type (no plugs)
         if(RootPart == nullptr)
@@ -291,8 +278,8 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
     if(plug != nullptr)
     {
 
-        ABotPart* plugPart = (ABotPart*)plug->GetOwner();
-        ABotPart* socketPart = (ABotPart*)socket.GetOwner();
+        ABotPart* plugPart = static_cast<ABotPart *>(plug->GetOwner());
+        ABotPart* socketPart = static_cast<ABotPart *>(socket.GetOwner());
         if(recursive)
         {
             TArray<USocketComponent*> childrenSockets;
@@ -303,8 +290,8 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
                 BreakSocket(*childrenSocket, destroyChild);
             }
         }
-        plug->BreakConstraint();
-        plug->TermComponentConstraint();
+        
+        //Disconnect
         plug->Reset();
         socket.Reset();
         socketPart->OnSocketBroken(&socket);
