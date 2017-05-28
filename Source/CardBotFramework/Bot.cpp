@@ -7,15 +7,21 @@ ABot::ABot()
     PrimaryActorTick.bCanEverTick = true;
 }
 
+void ABot::PreInitializeComponents()
+{
+    if(RootPart == nullptr)
+    {
+        Rebuild();
+    }
+}
+
 void ABot::Reset()
 {
     Super::Reset();
     if(RootPart != nullptr)
     {
-        DisassemblePart(*RootPart);
+        ResetPart(*RootPart);
     }
-    RootPart = nullptr;
-    Rebuild();
 }
 
 UActorComponent* ABot::GetComponentByName(FName name) const
@@ -62,27 +68,32 @@ bool ABot::Rebuild()
     TArray<ABotPart*> parts;
     GetParts(parts);
     
-    //First if RootPart is not set, seek one
-    if(RootPart == nullptr)
+    if(parts.Num() > 0)
     {
-        for(ABotPart* part : parts)
+        //First if RootPart is not set, seek one
+        if(RootPart == nullptr)
         {
-            if(RootPart == nullptr && part->HasSockets() && !part->HasPlugs())
+            for(ABotPart* part : parts)
             {
-                RootPart = part;
+                if(RootPart == nullptr && part->HasSockets() && !part->HasPlugs())
+                {
+                    RootPart = part;
+                }
             }
+        }
+    
+        if(RootPart != nullptr)
+        {
+            return AssemblePart(*RootPart, &parts);
+        }
+        else
+        {
+            ERROR(FString::Printf(TEXT("Bot %s failed to Rebuild, no root part found (sockets and no plugs)"), *(this->GetFName().ToString())));
+            return false;
         }
     }
     
-    if(RootPart != nullptr)
-    {
-        return AssemblePart(*RootPart, &parts);
-    }
-    else
-    {
-        ERROR(FString::Printf(TEXT("Bot %s failed to Rebuild, no root part found (sockets and no plugs)"), *(this->GetFName().ToString())));
-        return false;
-    }
+    return true;
 }
 
 void ABot::DestroyPart(ABotPart &part)
@@ -192,15 +203,20 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
     return this;
 }
 
-void ABot::DisassemblePart(ABotPart& part)
+void ABot::ResetPart(ABotPart& part)
 {
     TArray<USocketComponent*> sockets;
     part.GetSockets(sockets);
     
     for(USocketComponent* socket : sockets)
     {
-        BreakSocket(*socket, false, true);
+        if(socket->GetPlug() != nullptr)
+        {
+            ResetPart(*static_cast<ABotPart*>(socket->GetPlug()->GetOwner()));
+        }
     }
+    
+    part.Reset();
 }
 
 

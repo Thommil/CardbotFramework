@@ -23,11 +23,14 @@ protected:
     /** The root part of the Bot */
     ABotPart* RootPart;
     
+    /** Override to support ConstructionScript Bot */
+    virtual void PreInitializeComponents() override;
+    
     /** Recursive function to parse and assemble parts */
     bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = nullptr);
 
-    /** Recursive function to parse and disassemble parts */
-    void DisassemblePart(ABotPart &part);
+    /** Recursive function to parse and reset parts */
+    void ResetPart(ABotPart &part);
     
     /** Destroy a part properly */
     void DestroyPart(ABotPart &part);
@@ -40,6 +43,7 @@ protected:
     
 public:
     
+    /** Reset bot and parts */
     UFUNCTION(BlueprintCallable)
     virtual void Reset() override;
 	
