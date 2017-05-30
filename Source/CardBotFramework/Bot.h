@@ -32,11 +32,17 @@ protected:
     /** Recursive function to parse and reset parts */
     void ResetPart(ABotPart &part);
     
+    /** Connect a part properly */
+    void ConnectPart(ABotPart &part);
+    
     /** Destroy a part properly */
     void DestroyPart(ABotPart &part);
     
     /** Recursive function to break sockets constraint */
     void BreakSocket(USocketComponent& socket, bool destroyChild = false, bool recursive = false);
+    
+    /** Disconnect a part properly */
+    void DisconnectPart(ABotPart &part);
     
     /** Try to parse all parts and build Bot instance (assemble/connect) */
     bool Rebuild();

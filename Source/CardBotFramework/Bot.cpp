@@ -78,6 +78,7 @@ bool ABot::Rebuild()
                 if(RootPart == nullptr && part->HasSockets() && !part->HasPlugs())
                 {
                     RootPart = part;
+                    ConnectPart(*RootPart);
                 }
             }
         }
@@ -96,15 +97,6 @@ bool ABot::Rebuild()
     return true;
 }
 
-void ABot::DestroyPart(ABotPart &part)
-{
-    UChildActorComponent* component = part.GetParentComponent();
-    component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-    component->DestroyChildActor();
-    component->DestroyComponent();
-    OnPartRemoved(&part);
-}
-
 bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
 {
     //Optim
@@ -117,7 +109,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
     
     TArray<USocketComponent*> sockets;
     part.GetSockets(sockets);
-
+    
     //Parse all sockets to find not assembled ones
     for(USocketComponent* socket : sockets)
     {
@@ -140,23 +132,35 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                     plug->SetSocket(socket);
                     part.OnSocketConnected(socket);
                     plugPart->OnPlugConnected(plug);
+                    ConnectPart(*plugPart);
                     break;
                 }
             }
         }
+        
         if(socket->GetPlug() != nullptr && !AssemblePart(*static_cast<ABotPart *>(socket->GetPlug()->GetOwner()), parts))
         {
             return false;
         }
     }
  
-    //Events
-    if(!OnBotEventMulticastDelegate.IsAlreadyBound(&part, &ABotPart::HandleBotEvent ))
-    {
-        OnBotEventMulticastDelegate.AddDynamic( &part, &ABotPart::HandleBotEvent );
-    }
-    
     return true;
+}
+
+void ABot::ConnectPart(ABotPart &part)
+{
+    OnBotEventMulticastDelegate.AddDynamic(&part, &ABotPart::HandleBotEvent );
+    
+    UChildActorComponent* component = part.GetParentComponent();
+    component->RegisterComponent();
+    component->InitializeComponent();
+    
+    OnPartAdded(&part);
+    //Events
+    //if(!OnBotEventMulticastDelegate.IsAlreadyBound(&part, &ABotPart::HandleBotEvent ))
+    //{
+    
+    //}
 }
 
 
@@ -188,13 +192,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
         }
         
         //Call Rebuild to connect plugs and sockets
-        if(Rebuild())
-        {
-            childActorComponent->RegisterComponent();
-            childActorComponent->InitializeComponent();
-            OnPartAdded(part);
-        }
-        else
+        if(!Rebuild())
         {
             ERROR(FString::Printf(TEXT("Failed to Rebuild Bot %s when adding part %s"), *(this->GetFName().ToString()), *(name.ToString())));
             DestroyPart(*part);
@@ -224,39 +222,6 @@ void ABot::ResetPart(ABotPart& part)
     }
     
     part.Reset();
-}
-
-ABot* ABot::RemovePart(FName name)
-{
-    ABotPart* part = GetPart(name);
-    if(part != nullptr)
-    {
-        TArray<USocketComponent*> sockets;
-        part->GetSockets(sockets);
-        
-        for(USocketComponent* socket : sockets)
-        {
-            BreakSocket(*socket, true, true);
-        }
-        
-        TArray<UPlugComponent*> plugs;
-        part->GetPlugs(plugs);
-        
-        for(UPlugComponent* plug : plugs)
-        {
-            if(plug->GetSocket() != nullptr)
-            {
-                BreakSocket(*(plug->GetSocket()), false, false);
-            }
-        }
-        
-        if(RootPart == part)
-        {
-            RootPart = nullptr;
-        }
-        DestroyPart(*part);
-    }
-    return this;
 }
 
 ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
@@ -324,6 +289,57 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
             DestroyPart(*plugPart);
         }
     }
+}
+
+void ABot::DisconnectPart(ABotPart &part)
+{
+    //Events
+    //if(!OnBotEventMulticastDelegate.IsAlreadyBound(&part, &ABotPart::HandleBotEvent ))
+    //{
+    
+    //}
+}
+
+ABot* ABot::RemovePart(FName name)
+{
+    ABotPart* part = GetPart(name);
+    if(part != nullptr)
+    {
+        TArray<USocketComponent*> sockets;
+        part->GetSockets(sockets);
+        
+        for(USocketComponent* socket : sockets)
+        {
+            BreakSocket(*socket, true, true);
+        }
+        
+        TArray<UPlugComponent*> plugs;
+        part->GetPlugs(plugs);
+        
+        for(UPlugComponent* plug : plugs)
+        {
+            if(plug->GetSocket() != nullptr)
+            {
+                BreakSocket(*(plug->GetSocket()), false, false);
+            }
+        }
+        
+        if(RootPart == part)
+        {
+            RootPart = nullptr;
+        }
+        DestroyPart(*part);
+    }
+    return this;
+}
+
+void ABot::DestroyPart(ABotPart &part)
+{
+    OnPartRemoved(&part);
+    UChildActorComponent* component = part.GetParentComponent();
+    component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    component->DestroyChildActor();
+    component->DestroyComponent();
 }
 
 void ABot::SendEvent(TSubclassOf<UBaseEvent> event)

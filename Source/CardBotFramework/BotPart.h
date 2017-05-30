@@ -100,7 +100,6 @@ public:
 	ABotPart();
     
 public:
-    
     /** Indicates the event types routed to this part */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EEventType))
     int32 EventTypeFlags;

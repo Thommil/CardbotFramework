@@ -25,7 +25,6 @@ UPlugComponent* USocketComponent::GetPlug()
 
 UPlugComponent::UPlugComponent()
 {
-
     Socket = nullptr;
     PrimaryComponentTick.bCanEverTick = false;
 }
