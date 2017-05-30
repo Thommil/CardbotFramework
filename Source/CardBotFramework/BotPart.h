@@ -2,6 +2,7 @@
 
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "GameFramework/Actor.h"
+#include "BaseEvent.h"
 #include "BotPart.generated.h"
 
 /**
@@ -100,6 +101,10 @@ public:
     
 public:
     
+    /** Indicates the event types routed to this part */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EEventType))
+    int32 EventTypeFlags;
+    
     /** Helper to get a component from its name */
     UFUNCTION(BlueprintCallable)
     UActorComponent* GetComponentByName(FName name) const;
@@ -147,4 +152,13 @@ public:
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugBroken(UPlugComponent *plug);
     virtual void OnPlugBroken_Implementation(UPlugComponent *plug){}
+    
+    /** Called when Bot reroute a received event compliant with current part */
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
+    void OnBotEvent(UBaseEvent* event);
+    virtual void OnBotEvent_Implementation(UBaseEvent* event){WARNING(TEXT("HIT"));}
+    
+    /** Called on received event from Bot (route event to OnEvent)*/
+    UFUNCTION(Category="CardBot")
+    virtual void HandleBotEvent(TSubclassOf<UBaseEvent> event);
 };

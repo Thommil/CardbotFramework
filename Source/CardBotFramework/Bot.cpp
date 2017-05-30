@@ -149,6 +149,13 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
             return false;
         }
     }
+ 
+    //Events
+    if(!OnBotEventMulticastDelegate.IsAlreadyBound(&part, &ABotPart::HandleBotEvent ))
+    {
+        OnBotEventMulticastDelegate.AddDynamic( &part, &ABotPart::HandleBotEvent );
+    }
+    
     return true;
 }
 
@@ -218,7 +225,6 @@ void ABot::ResetPart(ABotPart& part)
     
     part.Reset();
 }
-
 
 ABot* ABot::RemovePart(FName name)
 {
@@ -318,4 +324,9 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
             DestroyPart(*plugPart);
         }
     }
+}
+
+void ABot::SendEvent(TSubclassOf<UBaseEvent> event)
+{
+    OnBotEventMulticastDelegate.Broadcast(event);
 }

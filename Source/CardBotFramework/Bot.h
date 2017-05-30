@@ -2,7 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "BotPart.h"
-#include "Moveable.h"
+#include "BaseEvent.h"
 #include "Bot.generated.h"
 
 /**
@@ -10,7 +10,7 @@
  *      - made of BotPart Actors -> assemble/connect based on plugs and sockets
  */
 UCLASS()
-class CARDBOTFRAMEWORK_API ABot : public AActor, public IMoveable
+class CARDBOTFRAMEWORK_API ABot : public AActor
 {
 	GENERATED_BODY()
 	
@@ -40,6 +40,10 @@ protected:
     
     /** Try to parse all parts and build Bot instance (assemble/connect) */
     bool Rebuild();
+    
+    /** Dynamic multicast delegate used to send events to parts */
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBotEventSignature, TSubclassOf<UBaseEvent>, event);
+    FOnBotEventSignature OnBotEventMulticastDelegate;
     
 public:
     
@@ -83,9 +87,7 @@ public:
     void OnPartRemoved(ABotPart* part);
     virtual void OnPartRemoved_Implementation(ABotPart* part){}
     
-    
-    virtual float SetSpeed_Implementation(float speedRate) override  {return 0;};
-    
-    virtual float GetSpeed_Implementation() override {return 0;};
-
+    /** Send event to Bot to be routed to parts depending on EventType flags*/
+    UFUNCTION(BlueprintCallable, Category="CardBot")
+    void SendEvent(TSubclassOf<UBaseEvent> event);
 };
