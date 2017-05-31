@@ -2,7 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "BotPart.h"
-#include "BaseEvent.h"
+#include "Action.h"
 #include "Bot.generated.h"
 
 /**
@@ -48,8 +48,8 @@ protected:
     bool Rebuild();
     
     /** Dynamic multicast delegate used to send events to parts */
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBotEventSignature, TSubclassOf<UBaseEvent>, event);
-    FOnBotEventSignature OnBotEventMulticastDelegate;
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPerformActionSignature, int32, actionFlags, UObject*, actionData);
+    FPerformActionSignature PerformActionMulticastDelegate;
     
 public:
     
@@ -93,7 +93,7 @@ public:
     void OnPartRemoved(ABotPart* part);
     virtual void OnPartRemoved_Implementation(ABotPart* part){}
     
-    /** Send event to Bot to be routed to parts depending on EventType flags*/
+    /** Send an Action to bot which acts as a hub for parts on action handling */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void SendEvent(TSubclassOf<UBaseEvent> event);
+    void PerformAction(TEnumAsByte<EActionType> actionType, int32 actionFlags, UObject* actionData);
 };

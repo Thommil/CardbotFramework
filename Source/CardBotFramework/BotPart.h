@@ -2,7 +2,7 @@
 
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "GameFramework/Actor.h"
-#include "BaseEvent.h"
+#include "Action.h"
 #include "BotPart.generated.h"
 
 /**
@@ -154,10 +154,10 @@ public:
     
     /** Called when Bot reroute a received event compliant with current part */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
-    void OnBotEvent(UBaseEvent* event);
-    virtual void OnBotEvent_Implementation(UBaseEvent* event){WARNING(TEXT("HIT"));}
+    void OnPerformAction(int32 actionFlags, UObject* actionData);
+    virtual void OnPerformAction_Implementation(int32 actionFlags, UObject* actionData){}
     
     /** Called on received event from Bot (route event to OnEvent)*/
     UFUNCTION(Category="CardBot")
-    virtual void HandleBotEvent(TSubclassOf<UBaseEvent> event);
+    virtual void PerformAction(int32 actionFlags, UObject* actionData);
 };

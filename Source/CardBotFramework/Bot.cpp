@@ -149,7 +149,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
 
 void ABot::ConnectPart(ABotPart &part)
 {
-    OnBotEventMulticastDelegate.AddDynamic(&part, &ABotPart::HandleBotEvent );
+    PerformActionMulticastDelegate.AddDynamic(&part, &ABotPart::PerformAction );
     
     UChildActorComponent* component = part.GetParentComponent();
     component->RegisterComponent();
@@ -283,6 +283,7 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         socket.Reset();
         socketPart->OnSocketBroken(&socket);
         plugPart->OnPlugBroken(plug);
+        DisconnectPart(*plugPart);
         
         if(destroyChild)
         {
@@ -342,7 +343,7 @@ void ABot::DestroyPart(ABotPart &part)
     component->DestroyComponent();
 }
 
-void ABot::SendEvent(TSubclassOf<UBaseEvent> event)
+void ABot::PerformAction(TEnumAsByte<EActionType> actionType, int32 actionFlags, UObject* actionData)
 {
-    OnBotEventMulticastDelegate.Broadcast(event);
+    PerformActionMulticastDelegate.Broadcast(actionFlags, actionData);
 }
