@@ -1,10 +1,25 @@
 #include "CardBotFramework.h"
+#include "Wireless.h"
 #include "Bot.h"
+
+//Optim
+UEnum* EActionTypeEnum = nullptr;
 
 ABot::ABot()
 {
     RootPart = nullptr;
     PrimaryActorTick.bCanEverTick = true;
+
+    if(EActionTypeEnum == nullptr)
+    {
+       EActionTypeEnum = FindObjectChecked<UEnum>(ANY_PACKAGE, TEXT("EActionType"), true);
+    }
+    
+    for(int i=0; i < (EActionTypeEnum->NumEnums() - 1); i++)
+    {
+        TSharedPtr<FPerformActionSignature> performActionDelegate(new FPerformActionSignature());
+        PerformActionMulticastDelegates.Add(static_cast<EActionType>(EActionTypeEnum->GetValueByIndex(i)), performActionDelegate);
+    }
 }
 
 void ABot::PreInitializeComponents()
@@ -149,18 +164,25 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
 
 void ABot::ConnectPart(ABotPart &part)
 {
-    PerformActionMulticastDelegate.AddDynamic(&part, &ABotPart::PerformAction );
-    
+    for(int i=0; i < (EActionTypeEnum->NumEnums() - 1); i++)
+    {
+        EActionType ActionType = static_cast<EActionType>(EActionTypeEnum->GetValueByIndex(i));
+        int32 ActionTypeBitmask =  (1 << static_cast<int32>(ActionType));
+        if ((ActionTypeBitmask & part.ActionCapabilites) != 0)
+        {
+            TSharedPtr<FPerformActionSignature> *performActionDelegate = PerformActionMulticastDelegates.Find(ActionType);
+            if(performActionDelegate != nullptr && performActionDelegate->IsValid())
+            {
+                performActionDelegate->Get()->AddUniqueDynamic(&part, &ABotPart::OnPerformAction);
+            }
+        }
+    }
+
     UChildActorComponent* component = part.GetParentComponent();
     component->RegisterComponent();
     component->InitializeComponent();
     
     OnPartAdded(&part);
-    //Events
-    //if(!OnBotEventMulticastDelegate.IsAlreadyBound(&part, &ABotPart::HandleBotEvent ))
-    //{
-    
-    //}
 }
 
 
@@ -294,11 +316,16 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
 
 void ABot::DisconnectPart(ABotPart &part)
 {
-    //Events
-    //if(!OnBotEventMulticastDelegate.IsAlreadyBound(&part, &ABotPart::HandleBotEvent ))
-    //{
-    
-    //}
+    if(!part.GetClass()->ImplementsInterface((UWireless::StaticClass())))
+    {
+        for (TPair<EActionType, TSharedPtr<FPerformActionSignature>> &performActionDelegatePair : PerformActionMulticastDelegates)
+        {
+            if(performActionDelegatePair.Value->IsAlreadyBound(&part, &ABotPart::OnPerformAction ))
+            {
+                performActionDelegatePair.Value->RemoveDynamic(&part, &ABotPart::OnPerformAction);
+            }
+        }
+    }
 }
 
 ABot* ABot::RemovePart(FName name)
@@ -336,6 +363,14 @@ ABot* ABot::RemovePart(FName name)
 
 void ABot::DestroyPart(ABotPart &part)
 {
+    for (TPair<EActionType, TSharedPtr<FPerformActionSignature>> &performActionDelegatePair : PerformActionMulticastDelegates)
+    {
+        if(performActionDelegatePair.Value->IsAlreadyBound(&part, &ABotPart::OnPerformAction))
+        {
+            performActionDelegatePair.Value->RemoveDynamic(&part, &ABotPart::OnPerformAction);
+        }
+    }
+    
     OnPartRemoved(&part);
     UChildActorComponent* component = part.GetParentComponent();
     component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
@@ -343,7 +378,11 @@ void ABot::DestroyPart(ABotPart &part)
     component->DestroyComponent();
 }
 
-void ABot::PerformAction(TEnumAsByte<EActionType> actionType, int32 actionFlags, UObject* actionData)
+void ABot::PerformAction(EActionType actionType, int32 actionFlags, UObject* actionData)
 {
-    PerformActionMulticastDelegate.Broadcast(actionFlags, actionData);
+    TSharedPtr<FPerformActionSignature> *performActionDelegate = PerformActionMulticastDelegates.Find(actionType);
+    if(performActionDelegate != nullptr && performActionDelegate->IsValid())
+    {
+        performActionDelegate->Get()->Broadcast(actionFlags, actionData);
+    }
 }

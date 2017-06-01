@@ -123,13 +123,3 @@ UPlugComponent* ABotPart::GetPlug(FName name) const
     }
     return nullptr;
 }
-
-void ABotPart::PerformAction(int32 actionFlags, UObject* actionData)
-{
-    //UBaseEvent* eventObject = static_cast<UBaseEvent*>(event->GetDefaultObject());
-    //int32 partFlag = static_cast<int32>(1 << (int32)EventTypeFlags);
-    //int32 eventFlag = static_cast<int32>(1 << (int32)eventObject->Type);
-    //if((partFlag & eventFlag) != 0){
-        OnPerformAction(actionFlags, actionData);
-    //}
-}

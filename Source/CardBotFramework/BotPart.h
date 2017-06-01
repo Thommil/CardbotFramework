@@ -101,8 +101,8 @@ public:
     
 public:
     /** Indicates the event types routed to this part */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EEventType))
-    int32 EventTypeFlags;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EActionCapability))
+    int32 ActionCapabilites;
     
     /** Helper to get a component from its name */
     UFUNCTION(BlueprintCallable)
@@ -156,8 +156,4 @@ public:
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPerformAction(int32 actionFlags, UObject* actionData);
     virtual void OnPerformAction_Implementation(int32 actionFlags, UObject* actionData){}
-    
-    /** Called on received event from Bot (route event to OnEvent)*/
-    UFUNCTION(Category="CardBot")
-    virtual void PerformAction(int32 actionFlags, UObject* actionData);
 };

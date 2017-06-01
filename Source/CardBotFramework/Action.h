@@ -2,39 +2,43 @@
 
 #include "Action.generated.h"
 
+
 /**
- *
+ * Action types to define routing policies by "channels"
  */
 UENUM(BlueprintType)
 enum class EActionType : uint8
 {
-    EAT_Move             UMETA(DisplayName="Move"),
-    EAT_Transform        UMETA(DisplayName="Transform"),
-    EAT_Attack           UMETA(DisplayName="Attack"),
-    EAT_User1            UMETA(DisplayName="User1"),
-    EAT_User2            UMETA(DisplayName="User2"),
-    EAT_User3            UMETA(DisplayName="User3"),
-    EAT_User4            UMETA(DisplayName="User4"),
-    EAT_User5            UMETA(DisplayName="User5"),
-    EAT_User6            UMETA(DisplayName="User6"),
-    EAT_User7            UMETA(DisplayName="User7"),
-    EAT_User8            UMETA(DisplayName="User8"),
-    EAT_User9            UMETA(DisplayName="User9")
+    Move        = 0x01  ,
+    Attack      = 0x02  ,
+    Custom1     = 0x04  ,
+    Custom2     = 0x08
 };
 
+
 /**
- *
+ * Action types to define routing capabilities by "channels"
  */
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta=(Bitflags))
+enum class EActionCapability : uint8
+{
+    Move        = 0x01  ,
+    Attack      = 0x02  ,
+    Custom1     = 0x04  ,
+    Custom2     = 0x08
+};
+ENUM_CLASS_FLAGS(EActionCapability)
+
+/**
+ * Action flags to define global and custom routing policies
+ */
+UENUM(BlueprintType, meta=(Bitflags))
 enum class EActionFlag : uint8
 {
-    EAF_User1             UMETA(DisplayName="User1"),
-    EAF_User2             UMETA(DisplayName="User2"),
-    EAF_User3             UMETA(DisplayName="User3"),
-    EAF_User4             UMETA(DisplayName="User4"),
-    EAF_User5             UMETA(DisplayName="User5"),
-    EAF_User6             UMETA(DisplayName="User6"),
-    EAF_User7             UMETA(DisplayName="User7"),
-    EAF_User8             UMETA(DisplayName="User8"),
-    EAF_User9             UMETA(DisplayName="User9")
+    User1       = 0x01  ,
+    User2       = 0x02  ,
+    User3       = 0x04  ,
+    User4       = 0x08
 };
+ENUM_CLASS_FLAGS(EActionFlag)
+
