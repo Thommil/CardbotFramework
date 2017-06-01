@@ -167,8 +167,7 @@ void ABot::ConnectPart(ABotPart &part)
     for(int i=0; i < (EActionTypeEnum->NumEnums() - 1); i++)
     {
         EActionType ActionType = static_cast<EActionType>(EActionTypeEnum->GetValueByIndex(i));
-        int32 ActionTypeBitmask =  (1 << static_cast<int32>(ActionType));
-        if ((ActionTypeBitmask & part.ActionCapabilites) != 0)
+        if (((1 << static_cast<int32>(ActionType)) & part.ActionCapabilites) != 0)
         {
             TSharedPtr<FPerformActionSignature> *performActionDelegate = PerformActionMulticastDelegates.Find(ActionType);
             if(performActionDelegate != nullptr && performActionDelegate->IsValid())
@@ -204,6 +203,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
             if(part->HasSockets() && !part->HasPlugs())
             {
                 RootPart = part;
+                ConnectPart(*RootPart);
             }
             else
             {
@@ -320,10 +320,7 @@ void ABot::DisconnectPart(ABotPart &part)
     {
         for (TPair<EActionType, TSharedPtr<FPerformActionSignature>> &performActionDelegatePair : PerformActionMulticastDelegates)
         {
-            if(performActionDelegatePair.Value->IsAlreadyBound(&part, &ABotPart::OnPerformAction ))
-            {
-                performActionDelegatePair.Value->RemoveDynamic(&part, &ABotPart::OnPerformAction);
-            }
+            performActionDelegatePair.Value->RemoveAll(&part);
         }
     }
 }
@@ -354,6 +351,7 @@ ABot* ABot::RemovePart(FName name)
         
         if(RootPart == part)
         {
+            DisconnectPart(*RootPart);
             RootPart = nullptr;
         }
         DestroyPart(*part);
@@ -365,10 +363,7 @@ void ABot::DestroyPart(ABotPart &part)
 {
     for (TPair<EActionType, TSharedPtr<FPerformActionSignature>> &performActionDelegatePair : PerformActionMulticastDelegates)
     {
-        if(performActionDelegatePair.Value->IsAlreadyBound(&part, &ABotPart::OnPerformAction))
-        {
-            performActionDelegatePair.Value->RemoveDynamic(&part, &ABotPart::OnPerformAction);
-        }
+        performActionDelegatePair.Value->RemoveAll(&part);
     }
     
     OnPartRemoved(&part);
