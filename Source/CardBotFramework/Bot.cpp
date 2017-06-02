@@ -2,19 +2,12 @@
 #include "Wireless.h"
 #include "Bot.h"
 
-//Optim
-UEnum* EActionTypeEnum = nullptr;
-
 ABot::ABot()
 {
     RootPart = nullptr;
     PrimaryActorTick.bCanEverTick = true;
 
-    if(EActionTypeEnum == nullptr)
-    {
-       EActionTypeEnum = FindObjectChecked<UEnum>(ANY_PACKAGE, TEXT("EActionType"), true);
-    }
-    
+    UEnum* EActionTypeEnum = FindObjectChecked<UEnum>(ANY_PACKAGE, TEXT("EActionType"), true);
     for(int i=0; i < (EActionTypeEnum->NumEnums() - 1); i++)
     {
         TSharedPtr<FPerformActionSignature> performActionDelegate(new FPerformActionSignature());
@@ -103,11 +96,6 @@ bool ABot::Rebuild()
         {
             return AssemblePart(*RootPart, &parts);
         }
-        else
-        {
-            ERROR(FString::Printf(TEXT("Bot %s failed to Rebuild, no root part found (sockets and no plugs)"), *(this->GetFName().ToString())));
-            return false;
-        }
     }
     
     return true;
@@ -168,6 +156,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
 
 void ABot::ConnectPart(ABotPart &part)
 {
+    UEnum* EActionTypeEnum = FindObjectChecked<UEnum>(ANY_PACKAGE, TEXT("EActionType"), true);
     for(int i=0; i < (EActionTypeEnum->NumEnums() - 1); i++)
     {
         EActionType ActionType = static_cast<EActionType>(EActionTypeEnum->GetValueByIndex(i));
