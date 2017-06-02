@@ -261,6 +261,7 @@ ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
                 if(socket != nullptr)
                 {
                     BreakSocket(*socket, false, recursive);
+                    return this;
                 }
             }
         }
