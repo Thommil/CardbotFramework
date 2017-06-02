@@ -3,6 +3,7 @@
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "GameFramework/Actor.h"
 #include "Action.h"
+#include "Sensor.h"
 #include "BotPart.generated.h"
 
 /**
@@ -104,13 +105,21 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EActionType))
     int32 ActionCapabilites;
     
+    /** Dynamic multicast delegate used to send sensor events to bot */
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSensorEventSignature, ESensorType, sensorType, ABotPart*, part, UObject*, sensorData);
+    FOnSensorEventSignature OnSensorEventDelegate;
+    
     /** Helper to get a component from its name */
     UFUNCTION(BlueprintCallable)
     UActorComponent* GetComponentByName(FName name) const;
 	
+    /** Gets the Bot owning this part */
+    UFUNCTION(BlueprintCallable, Category="CardBot")
+    ABot* GetBot() const;
+    
     /** Indicates if Part has sockets */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    inline bool HasSockets() const { return this->FindComponentByClass(USocketComponent::StaticClass()) != nullptr;}
+    inline bool HasSockets() const { return FindComponentByClass(USocketComponent::StaticClass()) != nullptr;}
     
     /** Get all sockets in a TArray */
     UFUNCTION(BlueprintCallable, Category="CardBot")
@@ -118,7 +127,7 @@ public:
     
     /** Indicates if Part has plugs */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    bool HasPlugs() const { return this->FindComponentByClass(UPlugComponent::StaticClass()) != nullptr;}
+    bool HasPlugs() const { return FindComponentByClass(UPlugComponent::StaticClass()) != nullptr;}
     
     /** Get a socket by name */
     UFUNCTION(BlueprintCallable, Category="CardBot")
@@ -131,6 +140,10 @@ public:
     /** Get a plug by name */
     UFUNCTION(BlueprintCallable, Category="CardBot")
     UPlugComponent* GetPlug(FName name) const;
+    
+    /** Generate a sensor event sent to owning Bot */
+    UFUNCTION(BlueprintCallable, Category="CardBot")
+    void GenerateSensorEvent(ESensorType sensorType, UObject* sensorData) const;
     
     /** Called after a connection to a owned socket has been made */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")

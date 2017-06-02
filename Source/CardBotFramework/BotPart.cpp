@@ -1,4 +1,5 @@
 #include "CardBotFramework.h"
+#include "Bot.h"
 #include "BotPart.h"
 
 USocketComponent::USocketComponent()
@@ -122,4 +123,15 @@ UPlugComponent* ABotPart::GetPlug(FName name) const
         }
     }
     return nullptr;
+}
+
+ABot* ABotPart::GetBot() const
+{
+    return (GetParentComponent() != nullptr) ? static_cast<ABot*>(GetParentComponent()->GetOwner()) : nullptr;
+}
+
+
+void ABotPart::GenerateSensorEvent(ESensorType sensorType, UObject* sensorData) const
+{
+    OnSensorEventDelegate.Broadcast(sensorType, const_cast<ABotPart*>(this), sensorData);
 }

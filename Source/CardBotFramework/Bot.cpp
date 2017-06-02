@@ -169,6 +169,7 @@ void ABot::ConnectPart(ABotPart &part)
             }
         }
     }
+    part.OnSensorEventDelegate.AddUniqueDynamic(this, &ABot::OnSensorEvent);
 }
 
 
@@ -307,12 +308,7 @@ void ABot::DisconnectPart(ABotPart &part, bool force)
 {
     if(force || !part.GetClass()->ImplementsInterface((UWireless::StaticClass())))
     {
-        for (TPair<EActionType, TSharedPtr<FPerformActionSignature>> &performActionDelegatePair : PerformActionMulticastDelegates)
-        {
-            performActionDelegatePair.Value->RemoveAll(&part);
-        }
-        
-        //Apply on children
+        //Recursive
         TArray<USocketComponent*> sockets;
         part.GetSockets(sockets);
         
@@ -324,6 +320,12 @@ void ABot::DisconnectPart(ABotPart &part, bool force)
                 DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), true);
             }
         }
+        
+        for (TPair<EActionType, TSharedPtr<FPerformActionSignature>> &performActionDelegatePair : PerformActionMulticastDelegates)
+        {
+            performActionDelegatePair.Value->RemoveAll(&part);
+        }
+        part.OnSensorEventDelegate.RemoveAll(this);
     }
 }
 

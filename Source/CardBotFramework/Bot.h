@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "BotPart.h"
 #include "Action.h"
+#include "Sensor.h"
 #include "Bot.generated.h"
 
 /**
@@ -98,4 +99,9 @@ public:
     /** Send an Action to bot which acts as a hub for parts on action handling */
     UFUNCTION(BlueprintCallable, Category="CardBot")
     void PerformAction(EActionType actionType, int32 actionFlags, UObject* actionData);
+    
+    /** Handles sensor events sent from parts */
+    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
+    void OnSensorEvent(ESensorType sensorType, ABotPart* part, UObject* sensorData);
+    virtual void OnSensorEvent_Implementation(ESensorType sensorType, ABotPart* part, UObject* sensorData){}
 };
