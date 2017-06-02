@@ -45,10 +45,10 @@ protected:
     void DestroyPart(ABotPart &part);
     
     /** Recursive function to break sockets constraint */
-    void BreakSocket(USocketComponent& socket, bool destroyChild = false, bool recursive = false);
+    void BreakSocket(USocketComponent& socket, bool destroyChild, bool recursive);
     
     /** Disconnect a part properly */
-    void DisconnectPart(ABotPart &part);
+    void DisconnectPart(ABotPart &part, bool force = false);
     
     /** Try to parse all parts and build Bot instance (assemble/connect) */
     bool Rebuild();

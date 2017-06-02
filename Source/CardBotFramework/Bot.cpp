@@ -94,6 +94,7 @@ bool ABot::Rebuild()
                 {
                     RootPart = part;
                     ConnectPart(*RootPart);
+                    OnPartAdded(RootPart);
                 }
             }
         }
@@ -147,7 +148,10 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                     plug->SetSocket(socket);
                     part.OnSocketConnected(socket);
                     plugPart->OnPlugConnected(plug);
+                    
                     ConnectPart(*plugPart);
+                    OnPartAdded(&part);
+                    
                     break;
                 }
             }
@@ -176,12 +180,6 @@ void ABot::ConnectPart(ABotPart &part)
             }
         }
     }
-
-    UChildActorComponent* component = part.GetParentComponent();
-    component->RegisterComponent();
-    component->InitializeComponent();
-    
-    OnPartAdded(&part);
 }
 
 
@@ -301,11 +299,12 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         }
         
         //Disconnect
+        DisconnectPart(*plugPart);
+        
         plug->Reset();
         socket.Reset();
         socketPart->OnSocketBroken(&socket);
         plugPart->OnPlugBroken(plug);
-        DisconnectPart(*plugPart);
         
         if(destroyChild)
         {
@@ -314,13 +313,26 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
     }
 }
 
-void ABot::DisconnectPart(ABotPart &part)
+void ABot::DisconnectPart(ABotPart &part, bool force)
 {
-    if(!part.GetClass()->ImplementsInterface((UWireless::StaticClass())))
+    if(force || !part.GetClass()->ImplementsInterface((UWireless::StaticClass())))
     {
         for (TPair<EActionType, TSharedPtr<FPerformActionSignature>> &performActionDelegatePair : PerformActionMulticastDelegates)
         {
             performActionDelegatePair.Value->RemoveAll(&part);
+        }
+        
+        //Apply on children
+        TArray<USocketComponent*> sockets;
+        part.GetSockets(sockets);
+        
+        for(USocketComponent* socket : sockets)
+        {
+            UPlugComponent *plug = socket->GetPlug();
+            if(plug != nullptr)
+            {
+                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), true);
+            }
         }
     }
 }
@@ -351,7 +363,7 @@ ABot* ABot::RemovePart(FName name)
         
         if(RootPart == part)
         {
-            DisconnectPart(*RootPart);
+            DisconnectPart(*RootPart, true);
             RootPart = nullptr;
         }
         DestroyPart(*part);

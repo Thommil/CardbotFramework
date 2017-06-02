@@ -101,7 +101,7 @@ public:
     
 public:
     /** Indicates the event types routed to this part */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EActionCapability))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EActionType))
     int32 ActionCapabilites;
     
     /** Helper to get a component from its name */
