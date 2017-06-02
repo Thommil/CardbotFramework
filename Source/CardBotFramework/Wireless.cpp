@@ -9,5 +9,3 @@ UWireless::UWireless(const class FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
 }
-
-// Add default functionality here for any IWireless functions that are not pure virtual.

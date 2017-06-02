@@ -8,17 +8,17 @@
 
 //MACROS
 #if(DEBUG_MODE == TRUE)
-    #define INFO(message) ConsoleInfo(message);
-    #define WARNING(message) ConsoleWarning(message);
-    #define ERROR(message) ConsoleError(message);
+    #define INFO(message) Info(message);
+    #define WARNING(message) Warning(message);
+    #define ERROR(message) Error(message);
 #else
     #define INFO(message)
     #define WARNING(message)
     #define ERROR(message)
 #endif
 
-void ConsoleInfo(const FString &message);
-void ConsoleWarning(const FString &message);
-void ConsoleError(const FString &message);
+void Info(const FString &message);
+void Warning(const FString &message);
+void Error(const FString &message);
 
 

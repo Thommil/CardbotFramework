@@ -296,7 +296,7 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
             
             for(USocketComponent* childrenSocket : childrenSockets)
             {
-                BreakSocket(*childrenSocket, destroyChild);
+                BreakSocket(*childrenSocket, destroyChild, recursive);
             }
         }
         

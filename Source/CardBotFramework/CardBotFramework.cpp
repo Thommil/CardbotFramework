@@ -2,7 +2,7 @@
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, CardBotFramework, "CardBotFramework" );
 
-void ConsoleInfo(const FString &message)
+void Info(const FString &message)
 {
     UE_LOG(LogTemp, Log, TEXT("%s"), *message);
     if(GEngine)
@@ -11,7 +11,7 @@ void ConsoleInfo(const FString &message)
     }
 }
 
-void ConsoleWarning(const FString &message)
+void Warning(const FString &message)
 {
     UE_LOG(LogTemp, Warning, TEXT("%s"), *message);
     if(GEngine)
@@ -20,7 +20,7 @@ void ConsoleWarning(const FString &message)
     }
 }
 
-void ConsoleError(const FString &message)
+void Error(const FString &message)
 {
     UE_LOG(LogTemp, Error, TEXT("%s"), *message);
     if(GEngine)
