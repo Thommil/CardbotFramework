@@ -60,8 +60,9 @@ public:
     UPlugComponent();
 
 private:
-    UFUNCTION(Category="CardBot")
-    void OnPlugBrokenWrapper(int32 ConstraintIndex);
+    /** Wrapper to route broken events to owners */
+    UFUNCTION()
+    void OnPlugBrokenWrapper(int32 ConstraintIndex = 0);
     
 protected:
     
@@ -109,7 +110,7 @@ public:
     int32 ActionCapabilites;
     
     /** Dynamic multicast delegate used to send sensor events to bot */
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnSensorEventSignature, ESensorType, sensorType, ABotPart*, part, UObject*, sensorData);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSensorEventSignature, ESensorType, sensorType, FName, eventName, ABotPart*, part, UObject*, sensorData);
     FOnSensorEventSignature OnSensorEventDelegate;
     
     /** Helper to get a component from its name */
@@ -146,31 +147,31 @@ public:
     
     /** Generate a sensor event sent to owning Bot */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void GenerateSensorEvent(ESensorType sensorType, UObject* sensorData) const;
+    void GenerateSensorEvent(ESensorType sensorType, FName eventName, UObject* eventData) const;
     
     /** Called after a connection to a owned socket has been made */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketConnected(USocketComponent *socket);
-    virtual void OnSocketConnected_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, socket);}
+    virtual void OnSocketConnected_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketConnected")), socket);}
     
     /** Called after a connection to a owned socket has been borken */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketBroken(USocketComponent *socket);
-    virtual void OnSocketBroken_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, socket);}
+    virtual void OnSocketBroken_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketBroken")), socket);}
     
     /** Called after a connection to a owned plug has been made */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugConnected(UPlugComponent *plug);
-    virtual void OnPlugConnected_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, plug);}
+    virtual void OnPlugConnected_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugConnected")), plug);}
     
     /** Called after a connection to a owned plug has been borken */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugBroken(UPlugComponent *plug);
-    virtual void OnPlugBroken_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, plug);}
+    virtual void OnPlugBroken_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugBroken")), plug);}
     
     /** Called when Bot reroute a received event compliant with current part */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
-    void OnPerformAction(int32 actionFlags, UObject* actionData);
-    virtual void OnPerformAction_Implementation(int32 actionFlags, UObject* actionData){}
+    void OnPerformAction(FName actionName, UObject* actionData);
+    virtual void OnPerformAction_Implementation(FName actionName, UObject* actionData){}
 
 };

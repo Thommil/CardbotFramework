@@ -372,11 +372,11 @@ void ABot::DestroyPart(ABotPart &part)
     component->DestroyComponent();
 }
 
-void ABot::PerformAction(EActionType actionType, int32 actionFlags, UObject* actionData)
+void ABot::PerformAction(EActionType actionType, FName actionName, UObject* actionData)
 {
     TSharedPtr<FPerformActionSignature> *performActionDelegate = PerformActionMulticastDelegates.Find(actionType);
     if(performActionDelegate != nullptr && performActionDelegate->IsValid())
     {
-        performActionDelegate->Get()->Broadcast(actionFlags, actionData);
+        performActionDelegate->Get()->Broadcast(actionName, actionData);
     }
 }

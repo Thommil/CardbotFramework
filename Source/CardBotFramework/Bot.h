@@ -21,7 +21,7 @@ public:
     
 private:
     /** Dynamic multicast delegate used to send events to parts */
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPerformActionSignature, int32, actionFlags, UObject*, actionData);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPerformActionSignature, FName, actionName, UObject*, actionData);
     /** Delegates are indexed by types */
     TMap<EActionType, TSharedPtr<FPerformActionSignature>> PerformActionMulticastDelegates;
 
@@ -98,10 +98,10 @@ public:
     
     /** Send an Action to bot which acts as a hub for parts on action handling */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    void PerformAction(EActionType actionType, int32 actionFlags, UObject* actionData);
+    void PerformAction(EActionType actionType, FName actionName, UObject* actionData);
     
     /** Handles sensor events sent from parts */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
-    void OnSensorEvent(ESensorType sensorType, ABotPart* part, UObject* sensorData);
-    virtual void OnSensorEvent_Implementation(ESensorType sensorType, ABotPart* part, UObject* sensorData){}
+    void OnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData);
+    virtual void OnSensorEvent_Implementation(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData){}
 };

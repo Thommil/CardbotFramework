@@ -16,7 +16,14 @@ void USocketComponent::Reset()
 
 void USocketComponent::SetPlug(UPlugComponent* plug)
 {
-    Plug = plug;
+    if(plug != nullptr)
+    {
+        Plug = plug;
+    }
+    else
+    {
+        Reset();
+    }
 }
 
 UPlugComponent* USocketComponent::GetPlug()
@@ -31,7 +38,7 @@ UPlugComponent::UPlugComponent()
 }
 
 void UPlugComponent::Reset() {
-    OnPlugBrokenWrapper(0);
+    OnPlugBrokenWrapper();
     TermComponentConstraint();
     Socket = nullptr;
 }
@@ -50,8 +57,13 @@ void UPlugComponent::SetSocket(USocketComponent* socket) {
             plugPart->OnPlugConnected(this);
             OnConstraintBroken.AddUniqueDynamic(this, &UPlugComponent::OnPlugBrokenWrapper);
         }
+        Socket = socket;
     }
-    Socket = socket;
+    else
+    {
+        Reset();
+    }
+    
 }
 
 void UPlugComponent::OnPlugBrokenWrapper(int32 ConstraintIndex)
@@ -147,7 +159,7 @@ ABot* ABotPart::GetBot() const
     return (GetParentComponent() != nullptr) ? static_cast<ABot*>(GetParentComponent()->GetOwner()) : nullptr;
 }
 
-void ABotPart::GenerateSensorEvent(ESensorType sensorType, UObject* sensorData) const
+void ABotPart::GenerateSensorEvent(ESensorType sensorType, FName eventName, UObject* eventData) const
 {
-    OnSensorEventDelegate.Broadcast(sensorType, const_cast<ABotPart*>(this), sensorData);
+    OnSensorEventDelegate.Broadcast(sensorType, eventName, const_cast<ABotPart*>(this), eventData);
 }
