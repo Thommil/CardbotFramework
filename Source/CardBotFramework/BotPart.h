@@ -58,6 +58,10 @@ class CARDBOTFRAMEWORK_API UPlugComponent : public UPhysicsConstraintComponent
 public:
     
     UPlugComponent();
+
+private:
+    UFUNCTION(Category="CardBot")
+    void OnPlugBrokenWrapper(int32 ConstraintIndex);
     
 protected:
     
@@ -96,8 +100,7 @@ class CARDBOTFRAMEWORK_API ABotPart : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	
+public:
 	ABotPart();
     
 public:
@@ -148,25 +151,26 @@ public:
     /** Called after a connection to a owned socket has been made */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketConnected(USocketComponent *socket);
-    virtual void OnSocketConnected_Implementation(USocketComponent *socket){}
+    virtual void OnSocketConnected_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, socket);}
     
     /** Called after a connection to a owned socket has been borken */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketBroken(USocketComponent *socket);
-    virtual void OnSocketBroken_Implementation(USocketComponent *socket){}
+    virtual void OnSocketBroken_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, socket);}
     
     /** Called after a connection to a owned plug has been made */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugConnected(UPlugComponent *plug);
-    virtual void OnPlugConnected_Implementation(UPlugComponent *plug){}
+    virtual void OnPlugConnected_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, plug);}
     
     /** Called after a connection to a owned plug has been borken */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugBroken(UPlugComponent *plug);
-    virtual void OnPlugBroken_Implementation(UPlugComponent *plug){}
+    virtual void OnPlugBroken_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, plug);}
     
     /** Called when Bot reroute a received event compliant with current part */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPerformAction(int32 actionFlags, UObject* actionData);
     virtual void OnPerformAction_Implementation(int32 actionFlags, UObject* actionData){}
+
 };

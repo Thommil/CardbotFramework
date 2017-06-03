@@ -31,6 +31,7 @@ UPlugComponent::UPlugComponent()
 }
 
 void UPlugComponent::Reset() {
+    OnPlugBrokenWrapper(0);
     TermComponentConstraint();
     Socket = nullptr;
 }
@@ -38,16 +39,32 @@ void UPlugComponent::Reset() {
 void UPlugComponent::SetSocket(USocketComponent* socket) {
     if(socket != nullptr)
     {
-        UActorComponent* socketBody = static_cast<ABotPart *>(socket->GetOwner())->GetComponentByName(socket->ComponentName);
-        UActorComponent* plugBody = static_cast<ABotPart *>(GetOwner())->GetComponentByName(ComponentName);
+        ABotPart *socketPart = static_cast<ABotPart *>(socket->GetOwner());
+        ABotPart *plugPart = static_cast<ABotPart *>(GetOwner());
+        UActorComponent* socketBody = socketPart->GetComponentByName(socket->ComponentName);
+        UActorComponent* plugBody = plugPart->GetComponentByName(ComponentName);
         if(socketBody != nullptr && plugBody != nullptr && socketBody->IsA(UPrimitiveComponent::StaticClass()) && plugBody->IsA(UPrimitiveComponent::StaticClass()))
         {
             SetConstrainedComponents(static_cast<UPrimitiveComponent *>(socketBody), NAME_None, static_cast<UPrimitiveComponent *>(plugBody), NAME_None);
+            socketPart->OnSocketConnected(socket);
+            plugPart->OnPlugConnected(this);
+            OnConstraintBroken.AddUniqueDynamic(this, &UPlugComponent::OnPlugBrokenWrapper);
         }
     }
     Socket = socket;
 }
 
+void UPlugComponent::OnPlugBrokenWrapper(int32 ConstraintIndex)
+{
+    OnConstraintBroken.RemoveAll(this);
+    ABotPart *plugPart = static_cast<ABotPart *>(GetOwner());
+    plugPart->OnPlugBroken(this);
+    if(Socket != nullptr)
+    {
+        ABotPart *socketPart = static_cast<ABotPart *>(Socket->GetOwner());
+        socketPart->OnSocketBroken(Socket);
+    }
+}
 
 USocketComponent* UPlugComponent::GetSocket() {
     return Socket;
@@ -129,7 +146,6 @@ ABot* ABotPart::GetBot() const
 {
     return (GetParentComponent() != nullptr) ? static_cast<ABot*>(GetParentComponent()->GetOwner()) : nullptr;
 }
-
 
 void ABotPart::GenerateSensorEvent(ESensorType sensorType, UObject* sensorData) const
 {

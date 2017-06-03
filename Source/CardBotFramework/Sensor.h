@@ -11,5 +11,6 @@ enum class ESensorType : uint8
 {
     Damage        = 1  ,
     Collision     = 2  ,
-    Sonar         = 3
+    Sonar         = 3  ,
+    System        = 4  
 };

@@ -1,7 +1,9 @@
 P0
- - Disconnect sub parts KO
+ - Event on damage & collision
 	
 P1 
- - detect socket broken from physics
+ - 
 
 OPT
+
+

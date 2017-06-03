@@ -132,12 +132,9 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                     }
                     
                     //Connect
+                    ConnectPart(*plugPart);
                     socket->SetPlug(plug);
                     plug->SetSocket(socket);
-                    part.OnSocketConnected(socket);
-                    plugPart->OnPlugConnected(plug);
-                    
-                    ConnectPart(*plugPart);
                     OnPartAdded(&part);
                     
                     break;
@@ -290,12 +287,10 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         }
         
         //Disconnect
-        DisconnectPart(*plugPart);
-        
         plug->Reset();
         socket.Reset();
-        socketPart->OnSocketBroken(&socket);
-        plugPart->OnPlugBroken(plug);
+        DisconnectPart(*plugPart);
+        //plugPart->OnPlugBroken(plug);
         
         if(destroyChild)
         {
