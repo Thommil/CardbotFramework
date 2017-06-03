@@ -1,5 +1,6 @@
 #include "CardBotFramework.h"
 #include "Bot.h"
+#include "CollisionEventData.h"
 #include "BotPart.h"
 
 USocketComponent::USocketComponent()
@@ -100,6 +101,10 @@ UActorComponent* ABotPart::GetComponentByName(FName name) const
     return nullptr;
 }
 
+ABot* ABotPart::GetBot() const
+{
+    return (GetParentComponent() != nullptr) ? static_cast<ABot*>(GetParentComponent()->GetOwner()) : nullptr;
+}
 
 void ABotPart::GetSockets(TArray<USocketComponent*>& sockets) const
 {
@@ -154,9 +159,31 @@ UPlugComponent* ABotPart::GetPlug(FName name) const
     return nullptr;
 }
 
-ABot* ABotPart::GetBot() const
+void ABotPart::OnSocketConnected_Implementation(USocketComponent *socket)
 {
-    return (GetParentComponent() != nullptr) ? static_cast<ABot*>(GetParentComponent()->GetOwner()) : nullptr;
+    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketConnected")), socket);
+}
+
+void ABotPart::OnSocketBroken_Implementation(USocketComponent *socket)
+{
+    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketBroken")), socket);
+}
+
+void ABotPart::OnPlugConnected_Implementation(UPlugComponent *plug)
+{
+    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugConnected")), plug);
+}
+
+void ABotPart::OnPlugBroken_Implementation(UPlugComponent *plug)
+{
+    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugBroken")), plug);
+}
+
+void ABotPart::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
+{
+    UCollisionEventData *CollisionEventData = NewObject<UCollisionEventData>();
+    CollisionEventData->SetEventData(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, &Hit);
+    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnPartHit")), CollisionEventData);
 }
 
 void ABotPart::GenerateSensorEvent(ESensorType sensorType, FName eventName, UObject* eventData) const

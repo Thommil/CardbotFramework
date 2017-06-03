@@ -152,26 +152,28 @@ public:
     /** Called after a connection to a owned socket has been made */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketConnected(USocketComponent *socket);
-    virtual void OnSocketConnected_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketConnected")), socket);}
+    virtual void OnSocketConnected_Implementation(USocketComponent *socket);
     
     /** Called after a connection to a owned socket has been borken */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnSocketBroken(USocketComponent *socket);
-    virtual void OnSocketBroken_Implementation(USocketComponent *socket){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketBroken")), socket);}
+    virtual void OnSocketBroken_Implementation(USocketComponent *socket);
     
     /** Called after a connection to a owned plug has been made */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugConnected(UPlugComponent *plug);
-    virtual void OnPlugConnected_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugConnected")), plug);}
+    virtual void OnPlugConnected_Implementation(UPlugComponent *plug);
     
     /** Called after a connection to a owned plug has been borken */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPlugBroken(UPlugComponent *plug);
-    virtual void OnPlugBroken_Implementation(UPlugComponent *plug){GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugBroken")), plug);}
+    virtual void OnPlugBroken_Implementation(UPlugComponent *plug);
     
     /** Called when Bot reroute a received event compliant with current part */
     UFUNCTION(BlueprintNativeEvent, Category="CardBot")
     void OnPerformAction(FName actionName, UObject* actionData);
     virtual void OnPerformAction_Implementation(FName actionName, UObject* actionData){}
 
+    /** Override hit mechanism to reroute on Bot */
+    virtual void NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit) override;
 };
