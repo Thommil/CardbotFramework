@@ -1,8 +1,8 @@
 P0
- - Event on damage (overlap ?)
+ - Event on damage
 	
 P1 
- - Pass on new() (try to pool)
+ - Pool Generic (C++ / Blueprint)
  - Sonar Sensor
  - Movements
 

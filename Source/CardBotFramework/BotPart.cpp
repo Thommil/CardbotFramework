@@ -1,6 +1,5 @@
 #include "CardBotFramework.h"
 #include "Bot.h"
-#include "CollisionEventData.h"
 #include "BotPart.h"
 
 USocketComponent::USocketComponent()
@@ -181,9 +180,23 @@ void ABotPart::OnPlugBroken_Implementation(UPlugComponent *plug)
 
 void ABotPart::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
 {
-    UCollisionEventData *CollisionEventData = NewObject<UCollisionEventData>();
+    Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
+    UCollisionEventData *CollisionEventData = FCollisionEventDataPool::Instance().Pull();
     CollisionEventData->SetEventData(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, &Hit);
-    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnPartHit")), CollisionEventData);
+    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnHit")), CollisionEventData);
+    FCollisionEventDataPool::Instance().PushBack(CollisionEventData);
+}
+
+void ABotPart::NotifyActorBeginOverlap(AActor * OtherActor)
+{
+    Super::NotifyActorBeginOverlap(OtherActor);
+    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnActorBeginOverlap")), OtherActor);
+}
+
+void ABotPart::NotifyActorEndOverlap(AActor * OtherActor)
+{
+    Super::NotifyActorEndOverlap(OtherActor);
+    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnActorEndOverlap")), OtherActor);
 }
 
 void ABotPart::GenerateSensorEvent(ESensorType sensorType, FName eventName, UObject* eventData) const

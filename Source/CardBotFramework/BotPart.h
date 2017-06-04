@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Action.h"
 #include "Sensor.h"
+#include "CollisionEventData.h"
 #include "BotPart.generated.h"
 
 /**
@@ -174,6 +175,12 @@ public:
     void OnPerformAction(FName actionName, UObject* actionData);
     virtual void OnPerformAction_Implementation(FName actionName, UObject* actionData){}
 
-    /** Override hit mechanism to reroute on Bot */
+    /** Override Hit mechanism to reroute on Bot */
     virtual void NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit) override;
+    
+    /** Override BeginOverlap mechanism to reroute on Bot */
+    virtual void NotifyActorBeginOverlap(AActor * OtherActor) override;
+    
+    /** Override EndOverlap mechanism to reroute on Bot */
+    virtual void NotifyActorEndOverlap(AActor * OtherActor) override;
 };
