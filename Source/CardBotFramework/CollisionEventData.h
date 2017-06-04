@@ -37,7 +37,7 @@ public:
     UPROPERTY(BlueprintReadOnly, Category="CardBot")
     FHitResult Hit;
     
-    inline void SetEventData(UPrimitiveComponent *partComponent, AActor *otherActor, UPrimitiveComponent *otherComponent, bool bselfMoved, FVector hitLocation, FVector hitNormal ,FVector normalImpulse, const FHitResult *hit)
+    inline void SetEventData(UPrimitiveComponent *partComponent, AActor *otherActor, UPrimitiveComponent *otherComponent, bool bselfMoved, FVector &hitLocation, FVector &hitNormal ,FVector &normalImpulse, const FHitResult &hit)
     {
         PartComponent = partComponent;
         OtherActor = otherActor;
@@ -46,7 +46,7 @@ public:
         HitLocation = hitLocation;
         HitNormal = hitNormal;
         NormalImpulse = normalImpulse;
-        Hit = *hit;
+        Hit = hit;
     }
     
 };

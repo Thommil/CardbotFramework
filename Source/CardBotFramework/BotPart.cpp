@@ -182,7 +182,7 @@ void ABotPart::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, cla
 {
     Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
     UCollisionEventData *CollisionEventData = FCollisionEventDataPool::Instance().Pull();
-    CollisionEventData->SetEventData(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, &Hit);
+    CollisionEventData->SetEventData(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
     GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnHit")), CollisionEventData);
     FCollisionEventDataPool::Instance().PushBack(CollisionEventData);
 }
