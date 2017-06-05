@@ -160,31 +160,35 @@ public:
     /** Called after a connection to a owned socket has been made */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnSocketConnected(USocketComponent *socket);
-    UFUNCTION()
-    virtual void NotifyOnSocketConnected(USocketComponent *socket);
     
     /** Called after a connection to a owned socket has been borken */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnSocketBroken(USocketComponent *socket);
-    UFUNCTION()
-    virtual void NotifyOnSocketBroken(USocketComponent *socket);
     
     /** Called after a connection to a owned plug has been made */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnPlugConnected(UPlugComponent *plug);
-    UFUNCTION()
-    virtual void NotifyOnPlugConnected(UPlugComponent *plug);
     
     /** Called after a connection to a owned plug has been borken */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnPlugBroken(UPlugComponent *plug);
-    UFUNCTION()
-    virtual void NotifyOnPlugBroken(UPlugComponent *plug);
     
     /** Called when Bot reroute a received event compliant with current part */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void PerformAction(FName actionName, UObject* actionData);
 
+    /** Reroute SocketConnected event on Bot */
+    UFUNCTION() virtual void NotifyOnSocketConnected(USocketComponent *socket);
+    
+    /** Reroute SocketBroken event on Bot */
+    UFUNCTION() virtual void NotifyOnSocketBroken(USocketComponent *socket);
+    
+    /** Reroute PlugConnected event on Bot */
+    UFUNCTION() virtual void NotifyOnPlugConnected(UPlugComponent *plug);
+    
+    /** Reroute PlugBroken event on Bot */
+    UFUNCTION() virtual void NotifyOnPlugBroken(UPlugComponent *plug);
+    
     /** Override Hit mechanism to reroute on Bot */
     virtual void NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit) override;
     

@@ -40,7 +40,7 @@ protected:
     void ResetPart(ABotPart &part);
     
     /** Connect a part properly */
-    void ConnectPart(ABotPart &part);
+    void ConnectPart(ABotPart &part, USocketComponent *socket = nullptr, UPlugComponent *plug = nullptr);
     
     /** Destroy a part properly */
     void DestroyPart(ABotPart &part);
@@ -49,7 +49,7 @@ protected:
     void BreakSocket(USocketComponent& socket, bool destroyChild, bool recursive);
     
     /** Disconnect a part properly */
-    void DisconnectPart(ABotPart &part, bool force = false);
+    void DisconnectPart(ABotPart &part, USocketComponent *socket = nullptr, UPlugComponent *plug = nullptr, bool isDead = false);
     
     /** Try to parse all parts and build Bot instance (assemble/connect) */
     bool Rebuild();
@@ -93,18 +93,21 @@ public:
     /** Called after a BotPart has been added */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnPartAdded(ABotPart* part);
-    UFUNCTION()
-    virtual void NotifyOnPartAdded(ABotPart* part);
     
     /** Called after a BotPart has been removed */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnPartRemoved(ABotPart* part);
-    UFUNCTION()
-    virtual void NotifyOnPartRemoved(ABotPart* part);
     
     /** Handles sensor events sent from parts */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData);
-    UFUNCTION()
-    virtual void NotifyOnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData);
+    
+    /** Reroute PartAdded event on Bot */
+    UFUNCTION() virtual void NotifyOnPartAdded(ABotPart* part);
+    
+    /** Reroute PartRemoved event on Bot */
+    UFUNCTION() virtual void NotifyOnPartRemoved(ABotPart* part);
+    
+    /** Reroute SensorEvent event on Bot */
+    UFUNCTION() virtual void NotifyOnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData);
 };

@@ -102,6 +102,7 @@ UActorComponent* ABotPart::GetComponentByName(FName name) const
         }
     }
     return nullptr;
+    //return FindObjectFast<UActorComponent>(ANY_PACKAGE, name, true);
 }
 
 ABot* ABotPart::GetBot() const

@@ -18,6 +18,7 @@ ABot::ABot()
 
 void ABot::PreInitializeComponents()
 {
+    //For Editor mode
     if(RootPart == nullptr)
     {
         Rebuild();
@@ -43,6 +44,7 @@ UActorComponent* ABot::GetComponentByName(FName name) const
         }
     }
     return nullptr;
+    //return FindObjectFast<UActorComponent>(ANY_PACKAGE, name, true, true);
 }
 
 void ABot::GetParts(TArray<ABotPart*>& parts) const
@@ -69,6 +71,7 @@ ABotPart* ABot::GetPart(FName name) const
         }
     }
     return nullptr;
+    //return FindObjectFast<ABotPart>(ANY_PACKAGE, name, true, true);
 }
 
 bool ABot::Rebuild()
@@ -133,16 +136,14 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                     }
                     
                     //Connect
-                    ConnectPart(*plugPart);
-                    socket->SetPlug(plug);
-                    plug->SetSocket(socket);
+                    ConnectPart(*plugPart, socket, plug);
                     NotifyOnPartAdded(&part);
-                    
                     break;
                 }
             }
         }
         
+        //Recursive
         if(socket->GetPlug() != nullptr && !AssemblePart(*static_cast<ABotPart *>(socket->GetPlug()->GetOwner()), parts))
         {
             return false;
@@ -152,8 +153,16 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
     return true;
 }
 
-void ABot::ConnectPart(ABotPart &part)
+void ABot::ConnectPart(ABotPart &part, USocketComponent *socket, UPlugComponent *plug)
 {
+    //Physics
+    if(socket != nullptr && plug != nullptr)
+    {
+        socket->SetPlug(plug);
+        plug->SetSocket(socket);
+    }
+    
+    //Logic
     UEnum* EActionTypeEnum = FindObjectChecked<UEnum>(ANY_PACKAGE, TEXT("EActionType"), true);
     for(int i=0; i < (EActionTypeEnum->NumEnums() - 1); i++)
     {
@@ -288,9 +297,7 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         }
         
         //Disconnect
-        plug->Reset();
-        socket.Reset();
-        DisconnectPart(*plugPart);
+        DisconnectPart(*plugPart, &socket, plug);
         
         if(destroyChild)
         {
@@ -299,20 +306,26 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
     }
 }
 
-void ABot::DisconnectPart(ABotPart &part, bool force)
+void ABot::DisconnectPart(ABotPart &part, USocketComponent *socket, UPlugComponent *plug, bool isDead)
 {
-    if(force || !part.GetClass()->ImplementsInterface((UWireless::StaticClass())))
+    if(socket != nullptr && plug != nullptr)
+    {
+        plug->Reset();
+        socket->Reset();
+    }
+    
+    if(isDead || !part.GetClass()->ImplementsInterface((UWireless::StaticClass())))
     {
         //Recursive
         TArray<USocketComponent*> sockets;
         part.GetSockets(sockets);
         
-        for(USocketComponent* socket : sockets)
+        for(USocketComponent* childSocket : sockets)
         {
-            UPlugComponent *plug = socket->GetPlug();
-            if(plug != nullptr)
+            UPlugComponent *childPlug = childSocket->GetPlug();
+            if(childPlug != nullptr)
             {
-                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), false);
+                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), childSocket, childPlug, false);
             }
         }
         
@@ -350,7 +363,7 @@ ABot* ABot::RemovePart(FName name)
         
         if(RootPart == part)
         {
-            DisconnectPart(*RootPart, true);
+            DisconnectPart(*RootPart, nullptr, nullptr, true);
             RootPart = nullptr;
         }
         DestroyPart(*part);
@@ -401,7 +414,7 @@ void ABot::NotifyOnSensorEvent(ESensorType sensorType, FName eventName, ABotPart
     }
     else if(eventName == FName(TEXT("OnDie")))
     {
-        DisconnectPart(*part, true);
+        DisconnectPart(*part, nullptr, nullptr, true);
         
         if(part->bBreakOnDeath)
         {
