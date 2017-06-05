@@ -109,6 +109,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EActionType))
     int32 ActionCapabilites;
     
+    /** Life of the part (max = 1.0) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot")
+    float LifeRate;
+    
+    /** Indicates that part is disconnected on death */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot")
+    bool bBreakOnDeath;
+    
     /** Dynamic multicast delegate used to send sensor events to bot */
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSensorEventSignature, ESensorType, sensorType, FName, eventName, ABotPart*, part, UObject*, sensorData);
     FOnSensorEventSignature OnSensorEventDelegate;
@@ -150,29 +158,32 @@ public:
     void GenerateSensorEvent(ESensorType sensorType, FName eventName, UObject* eventData) const;
     
     /** Called after a connection to a owned socket has been made */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnSocketConnected(USocketComponent *socket);
-    virtual void OnSocketConnected_Implementation(USocketComponent *socket);
+    UFUNCTION()
+    virtual void NotifyOnSocketConnected(USocketComponent *socket);
     
     /** Called after a connection to a owned socket has been borken */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnSocketBroken(USocketComponent *socket);
-    virtual void OnSocketBroken_Implementation(USocketComponent *socket);
+    UFUNCTION()
+    virtual void NotifyOnSocketBroken(USocketComponent *socket);
     
     /** Called after a connection to a owned plug has been made */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnPlugConnected(UPlugComponent *plug);
-    virtual void OnPlugConnected_Implementation(UPlugComponent *plug);
+    UFUNCTION()
+    virtual void NotifyOnPlugConnected(UPlugComponent *plug);
     
     /** Called after a connection to a owned plug has been borken */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnPlugBroken(UPlugComponent *plug);
-    virtual void OnPlugBroken_Implementation(UPlugComponent *plug);
+    UFUNCTION()
+    virtual void NotifyOnPlugBroken(UPlugComponent *plug);
     
     /** Called when Bot reroute a received event compliant with current part */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
-    void OnPerformAction(FName actionName, UObject* actionData);
-    virtual void OnPerformAction_Implementation(FName actionName, UObject* actionData){}
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
+    void PerformAction(FName actionName, UObject* actionData);
 
     /** Override Hit mechanism to reroute on Bot */
     virtual void NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit) override;

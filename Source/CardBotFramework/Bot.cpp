@@ -1,5 +1,6 @@
 #include "CardBotFramework.h"
 #include "Wireless.h"
+#include "DamageEventData.h"
 #include "Bot.h"
 
 ABot::ABot()
@@ -87,7 +88,7 @@ bool ABot::Rebuild()
                 {
                     RootPart = part;
                     ConnectPart(*RootPart);
-                    OnPartAdded(RootPart);
+                    NotifyOnPartAdded(RootPart);
                 }
             }
         }
@@ -135,7 +136,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                     ConnectPart(*plugPart);
                     socket->SetPlug(plug);
                     plug->SetSocket(socket);
-                    OnPartAdded(&part);
+                    NotifyOnPartAdded(&part);
                     
                     break;
                 }
@@ -162,11 +163,11 @@ void ABot::ConnectPart(ABotPart &part)
             TSharedPtr<FPerformActionSignature> *performActionDelegate = PerformActionMulticastDelegates.Find(ActionType);
             if(performActionDelegate != nullptr && performActionDelegate->IsValid())
             {
-                performActionDelegate->Get()->AddUniqueDynamic(&part, &ABotPart::OnPerformAction);
+                performActionDelegate->Get()->AddUniqueDynamic(&part, &ABotPart::PerformAction);
             }
         }
     }
-    part.OnSensorEventDelegate.AddUniqueDynamic(this, &ABot::OnSensorEvent);
+    part.OnSensorEventDelegate.AddUniqueDynamic(this, &ABot::NotifyOnSensorEvent);
 }
 
 
@@ -290,7 +291,6 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         plug->Reset();
         socket.Reset();
         DisconnectPart(*plugPart);
-        //plugPart->OnPlugBroken(plug);
         
         if(destroyChild)
         {
@@ -312,7 +312,7 @@ void ABot::DisconnectPart(ABotPart &part, bool force)
             UPlugComponent *plug = socket->GetPlug();
             if(plug != nullptr)
             {
-                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), true);
+                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), false);
             }
         }
         
@@ -379,4 +379,51 @@ void ABot::PerformAction(EActionType actionType, FName actionName, UObject* acti
     {
         performActionDelegate->Get()->Broadcast(actionName, actionData);
     }
+}
+
+void ABot::NotifyOnPartAdded(ABotPart* part)
+{
+    OnPartAdded(part);
+}
+
+
+void ABot::NotifyOnPartRemoved(ABotPart* part)
+{
+    OnPartRemoved(part);
+}
+
+void ABot::NotifyOnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData)
+{
+    if(eventName == FName(TEXT("OnTakeDamage")))
+    {
+        UDamageEventData* DamageEventData = static_cast<UDamageEventData*>(eventData);
+        TakeDamage(DamageEventData->DamageAmount,DamageEventData->DamageEvent,DamageEventData->EventInstigator,DamageEventData->DamageCauser);
+    }
+    else if(eventName == FName(TEXT("OnDie")))
+    {
+        DisconnectPart(*part, true);
+        
+        if(part->bBreakOnDeath)
+        {
+            TArray<USocketComponent*> sockets;
+            part->GetSockets(sockets);
+            
+            for(USocketComponent* socket : sockets)
+            {
+                BreakSocket(*socket, false, false);
+            }
+            
+            TArray<UPlugComponent*> plugs;
+            part->GetPlugs(plugs);
+            
+            for(UPlugComponent* plug : plugs)
+            {
+                if(plug->GetSocket() != nullptr)
+                {
+                    BreakSocket(*(plug->GetSocket()), false, false);
+                }
+            }
+        }
+    }
+    OnSensorEvent(sensorType, eventName, part, eventData);
 }

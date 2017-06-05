@@ -55,8 +55,8 @@ void UPlugComponent::SetSocket(USocketComponent* socket) {
         if(socketBody != nullptr && plugBody != nullptr && socketBody->IsA(UPrimitiveComponent::StaticClass()) && plugBody->IsA(UPrimitiveComponent::StaticClass()))
         {
             SetConstrainedComponents(static_cast<UPrimitiveComponent *>(socketBody), NAME_None, static_cast<UPrimitiveComponent *>(plugBody), NAME_None);
-            socketPart->OnSocketConnected(socket);
-            plugPart->OnPlugConnected(this);
+            socketPart->NotifyOnSocketConnected(socket);
+            plugPart->NotifyOnPlugConnected(this);
             OnConstraintBroken.AddUniqueDynamic(this, &UPlugComponent::OnPlugBrokenWrapper);
         }
         Socket = socket;
@@ -72,11 +72,11 @@ void UPlugComponent::OnPlugBrokenWrapper(int32 ConstraintIndex)
 {
     OnConstraintBroken.RemoveAll(this);
     ABotPart *plugPart = static_cast<ABotPart *>(GetOwner());
-    plugPart->OnPlugBroken(this);
+    plugPart->NotifyOnPlugBroken(this);
     if(Socket != nullptr)
     {
         ABotPart *socketPart = static_cast<ABotPart *>(Socket->GetOwner());
-        socketPart->OnSocketBroken(Socket);
+        socketPart->NotifyOnSocketBroken(Socket);
     }
 }
 
@@ -87,6 +87,8 @@ USocketComponent* UPlugComponent::GetSocket() {
 
 ABotPart::ABotPart()
 {
+    LifeRate = 1.0f;
+    bBreakOnDeath = true;
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -160,24 +162,28 @@ UPlugComponent* ABotPart::GetPlug(FName name) const
     return nullptr;
 }
 
-void ABotPart::OnSocketConnected_Implementation(USocketComponent *socket)
+void ABotPart::NotifyOnSocketConnected(USocketComponent *socket)
 {
     GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketConnected")), socket);
+    OnSocketConnected(socket);
 }
 
-void ABotPart::OnSocketBroken_Implementation(USocketComponent *socket)
+void ABotPart::NotifyOnSocketBroken(USocketComponent *socket)
 {
     GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketBroken")), socket);
+    OnSocketBroken(socket);
 }
 
-void ABotPart::OnPlugConnected_Implementation(UPlugComponent *plug)
+void ABotPart::NotifyOnPlugConnected(UPlugComponent *plug)
 {
     GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugConnected")), plug);
+    OnPlugConnected(plug);
 }
 
-void ABotPart::OnPlugBroken_Implementation(UPlugComponent *plug)
+void ABotPart::NotifyOnPlugBroken(UPlugComponent *plug)
 {
     GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugBroken")), plug);
+    OnPlugBroken(plug);
 }
 
 void ABotPart::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
@@ -210,6 +216,13 @@ float ABotPart::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
         DamageEventData->SetEventData(finalDamageAmount, DamageEvent, EventInstigator, DamageCauser);
         GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnTakeDamage")), DamageEventData);
         FDamageEventDataPool::Instance().PushBack(DamageEventData);
+        
+        LifeRate -= finalDamageAmount;
+        
+        if(LifeRate <= 0)
+        {
+            GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnDie")), this);
+        }
     }
     return finalDamageAmount;
 }

@@ -86,22 +86,25 @@ public:
     UFUNCTION(BlueprintCallable)
     UActorComponent* GetComponentByName(FName name) const;
     
-    /** Called after a BotPart has been added */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
-    void OnPartAdded(ABotPart* part);
-    virtual void OnPartAdded_Implementation(ABotPart* part){}
-    
-    /** Called after a BotPart has been removed */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
-    void OnPartRemoved(ABotPart* part);
-    virtual void OnPartRemoved_Implementation(ABotPart* part){}
-    
     /** Send an Action to bot which acts as a hub for parts on action handling */
     UFUNCTION(BlueprintCallable, Category="CardBot")
     void PerformAction(EActionType actionType, FName actionName, UObject* actionData);
     
+    /** Called after a BotPart has been added */
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
+    void OnPartAdded(ABotPart* part);
+    UFUNCTION()
+    virtual void NotifyOnPartAdded(ABotPart* part);
+    
+    /** Called after a BotPart has been removed */
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
+    void OnPartRemoved(ABotPart* part);
+    UFUNCTION()
+    virtual void NotifyOnPartRemoved(ABotPart* part);
+    
     /** Handles sensor events sent from parts */
-    UFUNCTION(BlueprintNativeEvent, Category="CardBot")
+    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData);
-    virtual void OnSensorEvent_Implementation(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData){}
+    UFUNCTION()
+    virtual void NotifyOnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData);
 };
