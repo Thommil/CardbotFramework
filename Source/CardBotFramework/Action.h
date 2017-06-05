@@ -11,7 +11,8 @@ enum class EActionType : uint8
 {
     Move        = 1  ,
     Attack      = 2  ,
-    Morph       = 3  ,
-    Special     = 4  ,
-    System      = 5
+    Defense     = 3  ,
+    Morph       = 4  ,
+    Special     = 5  ,
+    System      = 6
 };

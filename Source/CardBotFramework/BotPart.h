@@ -4,7 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "Action.h"
 #include "Sensor.h"
-#include "CollisionEventData.h"
 #include "BotPart.generated.h"
 
 /**
@@ -183,4 +182,7 @@ public:
     
     /** Override EndOverlap mechanism to reroute on Bot */
     virtual void NotifyActorEndOverlap(AActor * OtherActor) override;
+    
+    /** Override Damage mechanism to reroute on Bot */
+    virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 };

@@ -1,5 +1,7 @@
 #include "CardBotFramework.h"
 #include "Bot.h"
+#include "CollisionEventData.h"
+#include "DamageEventData.h"
 #include "BotPart.h"
 
 USocketComponent::USocketComponent()
@@ -198,6 +200,20 @@ void ABotPart::NotifyActorEndOverlap(AActor * OtherActor)
     Super::NotifyActorEndOverlap(OtherActor);
     GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnActorEndOverlap")), OtherActor);
 }
+
+float ABotPart::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    float finalDamageAmount = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    if(bCanBeDamaged)
+    {
+        UDamageEventData *DamageEventData = FDamageEventDataPool::Instance().Pull();
+        DamageEventData->SetEventData(finalDamageAmount, DamageEvent, EventInstigator, DamageCauser);
+        GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnTakeDamage")), DamageEventData);
+        FDamageEventDataPool::Instance().PushBack(DamageEventData);
+    }
+    return finalDamageAmount;
+}
+
 
 void ABotPart::GenerateSensorEvent(ESensorType sensorType, FName eventName, UObject* eventData) const
 {
