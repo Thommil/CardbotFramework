@@ -1,6 +1,5 @@
 #pragma once
 
-#include "UObject/NoExportTypes.h"
 #include "CollisionEventData.generated.h"
 
 /**
@@ -49,43 +48,4 @@ public:
         Hit = hit;
     }
     
-};
-
-class CARDBOTFRAMEWORK_API FCollisionEventDataPool
-{
-private:
-    TSet<UCollisionEventData*> InnerPool;
-    
-    inline FCollisionEventDataPool(uint16 initialCapacity = DEFAULT_COLLISION_EVENTDATA_POOL_SIZE)
-    {
-        InnerPool.Reserve(initialCapacity);
-        for(uint16 i=0; i < initialCapacity; i++)
-        {
-            InnerPool.Add(NewObject<UCollisionEventData>());
-        }
-    }
-    
-public:
-    inline static FCollisionEventDataPool& Instance()
-    {
-        static FCollisionEventDataPool Instance;
-        return Instance;
-    }
-    
-    inline virtual ~FCollisionEventDataPool()
-    {
-        InnerPool.Empty();
-    }
-    
-public:
-    inline UCollisionEventData* Pull()
-    {
-        static FSetElementId index = FSetElementId::FromInteger(0);
-        return InnerPool[index];
-    }
-    
-    inline void PushBack(UCollisionEventData* CollisionEventData)
-    {
-        InnerPool.Add(CollisionEventData);
-    }
 };

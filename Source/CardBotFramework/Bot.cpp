@@ -44,7 +44,6 @@ UActorComponent* ABot::GetComponentByName(FName name) const
         }
     }
     return nullptr;
-    //return FindObjectFast<UActorComponent>(ANY_PACKAGE, name, true, true);
 }
 
 void ABot::GetParts(TArray<ABotPart*>& parts) const
@@ -71,7 +70,6 @@ ABotPart* ABot::GetPart(FName name) const
         }
     }
     return nullptr;
-    //return FindObjectFast<ABotPart>(ANY_PACKAGE, name, true, true);
 }
 
 bool ABot::Rebuild()
@@ -284,7 +282,6 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
     {
 
         ABotPart* plugPart = static_cast<ABotPart *>(plug->GetOwner());
-        ABotPart* socketPart = static_cast<ABotPart *>(socket.GetOwner());
         if(recursive)
         {
             TArray<USocketComponent*> childrenSockets;

@@ -4,6 +4,9 @@
 #include "GameFramework/Actor.h"
 #include "Action.h"
 #include "Sensor.h"
+#include "ObjectPool.h"
+#include "CollisionEventData.h"
+#include "DamageEventData.h"
 #include "BotPart.generated.h"
 
 /**
@@ -103,8 +106,13 @@ class CARDBOTFRAMEWORK_API ABotPart : public AActor
 	
 public:
 	ABotPart();
+
+private:
+    static TObjectPool<UCollisionEventData> CollisionEventDataPool;
+    static TObjectPool<UDamageEventData> DamageEventDataPool;
     
 public:
+    
     /** Indicates the event types routed to this part */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CardBot", meta=(Bitmask, BitmaskEnum=EActionType))
     int32 ActionCapabilites;

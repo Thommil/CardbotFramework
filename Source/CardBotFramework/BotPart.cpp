@@ -1,8 +1,7 @@
 #include "CardBotFramework.h"
 #include "Bot.h"
-#include "CollisionEventData.h"
-#include "DamageEventData.h"
 #include "BotPart.h"
+
 
 USocketComponent::USocketComponent()
 {
@@ -85,6 +84,10 @@ USocketComponent* UPlugComponent::GetSocket() {
 }
 
 
+//Init Pools
+TObjectPool<UCollisionEventData> ABotPart::CollisionEventDataPool = TObjectPool<UCollisionEventData>(DEFAULT_COLLISIONEVENTDATA_POOL_SIZE);
+TObjectPool<UDamageEventData> ABotPart::DamageEventDataPool = TObjectPool<UDamageEventData>(DEFAULT_DAMAGEEVENTDATA_POOL_SIZE);
+
 ABotPart::ABotPart()
 {
     LifeRate = 1.0f;
@@ -102,7 +105,6 @@ UActorComponent* ABotPart::GetComponentByName(FName name) const
         }
     }
     return nullptr;
-    //return FindObjectFast<UActorComponent>(ANY_PACKAGE, name, true);
 }
 
 ABot* ABotPart::GetBot() const
@@ -190,10 +192,10 @@ void ABotPart::NotifyOnPlugBroken(UPlugComponent *plug)
 void ABotPart::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
 {
     Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
-    UCollisionEventData *CollisionEventData = FCollisionEventDataPool::Instance().Pull();
+    UCollisionEventData *CollisionEventData = ABotPart::CollisionEventDataPool.Pop();
     CollisionEventData->SetEventData(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
     GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnHit")), CollisionEventData);
-    FCollisionEventDataPool::Instance().PushBack(CollisionEventData);
+    ABotPart::CollisionEventDataPool.Push(CollisionEventData);
 }
 
 void ABotPart::NotifyActorBeginOverlap(AActor * OtherActor)
@@ -213,10 +215,10 @@ float ABotPart::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
     float finalDamageAmount = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
     if(bCanBeDamaged)
     {
-        UDamageEventData *DamageEventData = FDamageEventDataPool::Instance().Pull();
+        UDamageEventData *DamageEventData = ABotPart::DamageEventDataPool.Pop();
         DamageEventData->SetEventData(finalDamageAmount, DamageEvent, EventInstigator, DamageCauser);
         GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnTakeDamage")), DamageEventData);
-        FDamageEventDataPool::Instance().PushBack(DamageEventData);
+        ABotPart::DamageEventDataPool.Push(DamageEventData);
         
         LifeRate -= finalDamageAmount;
         
