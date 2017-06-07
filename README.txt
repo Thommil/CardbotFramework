@@ -1,8 +1,7 @@
 P0
- - Event on damage
+ - Unit Tests
 	
 P1 
- - Pool Generic (C++ / Blueprint)
  - Sonar Sensor
  - Movements
 
