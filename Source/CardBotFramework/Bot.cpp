@@ -98,6 +98,11 @@ bool ABot::Rebuild()
         {
             return AssemblePart(*RootPart, &parts);
         }
+        else
+        {
+            ERROR(TEXT("No root part found (must have sockets and no plugs)"));
+            return false;
+        }
     }
     
     return true;
@@ -135,7 +140,7 @@ bool ABot::AssemblePart(ABotPart& part, TArray<ABotPart*> *parts)
                     
                     //Connect
                     ConnectPart(*plugPart, socket, plug);
-                    NotifyOnPartAdded(&part);
+                    NotifyOnPartAdded(plugPart);
                     break;
                 }
             }
@@ -189,23 +194,7 @@ ABot* ABot::AddPart(TSubclassOf<ABotPart> partClass, FName name)
         //Create Actor
         childActorComponent->CreateChildActor();
         ABotPart* part = static_cast<ABotPart *>(childActorComponent->GetChildActor());
-        
-        //No RootPart --> Added part must be of RootPart type (no plugs)
-        if(RootPart == nullptr)
-        {
-            if(part->HasSockets() && !part->HasPlugs())
-            {
-                RootPart = part;
-                ConnectPart(*RootPart);
-            }
-            else
-            {
-                ERROR(FString::Printf(TEXT("Bot %s failed to add root part %s which is not adapted (must have sockets and no plugs)"), *(this->GetFName().ToString()), *(name.ToString())));
-                DestroyPart(*part);
-                return this;
-            }
-        }
-        
+
         //Call Rebuild to connect plugs and sockets
         if(!Rebuild())
         {
