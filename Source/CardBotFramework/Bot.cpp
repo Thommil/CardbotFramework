@@ -228,7 +228,7 @@ void ABot::ResetPart(ABotPart& part)
     part.Reset();
 }
 
-ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
+ABot* ABot::BreakSocket(FName name, bool recursive)
 {
     if(RootPart != nullptr)
     {
@@ -237,26 +237,14 @@ ABot* ABot::BreakSocket(FName name, bool all, bool recursive)
         
         for(ABotPart *part : parts)
         {
-            if(all)
-            {
-                TArray<USocketComponent*> sockets;
-                part->GetSockets(sockets);
+            TArray<USocketComponent*> sockets;
+            part->GetSockets(sockets);
                 
-                for(USocketComponent* socket : sockets)
-                {
-                    if(socket->Name == name)
-                    {
-                        BreakSocket(*socket, false, recursive);
-                    }
-                }
-            }
-            else
+            for(USocketComponent* socket : sockets)
             {
-                USocketComponent *socket = part->GetSocket(name);
-                if(socket != nullptr)
+                if(socket->Name == name)
                 {
                     BreakSocket(*socket, false, recursive);
-                    return this;
                 }
             }
         }
@@ -283,7 +271,7 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
         }
         
         //Disconnect
-        DisconnectPart(*plugPart, &socket, plug);
+        DisconnectPart(*plugPart, &socket, plug, false, false);
         
         if(destroyChild)
         {
@@ -292,9 +280,9 @@ void ABot::BreakSocket(USocketComponent& socket, bool destroyChild, bool recursi
     }
 }
 
-void ABot::DisconnectPart(ABotPart &part, USocketComponent *socket, UPlugComponent *plug, bool isDead)
+void ABot::DisconnectPart(ABotPart &part, USocketComponent *socket, UPlugComponent *plug, bool isDead, bool logicalOnly)
 {
-    if(socket != nullptr && plug != nullptr)
+    if(!logicalOnly && socket != nullptr && plug != nullptr)
     {
         plug->Reset();
         socket->Reset();
@@ -311,7 +299,7 @@ void ABot::DisconnectPart(ABotPart &part, USocketComponent *socket, UPlugCompone
             UPlugComponent *childPlug = childSocket->GetPlug();
             if(childPlug != nullptr)
             {
-                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), childSocket, childPlug, false);
+                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), childSocket, childPlug);
             }
         }
         

@@ -25,6 +25,18 @@ private:
     /** Delegates are indexed by types */
     TMap<EActionType, TSharedPtr<FPerformActionSignature>> PerformActionMulticastDelegates;
 
+    /** Recursive function to parse and assemble parts */
+    bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = nullptr);
+    
+    /** Recursive function to parse and reset parts */
+    void ResetPart(ABotPart &part);
+    
+    /** Connect a part properly */
+    void ConnectPart(ABotPart &part, USocketComponent *socket = nullptr, UPlugComponent *plug = nullptr);
+    
+    /** Disconnect a part properly */
+    void DisconnectPart(ABotPart &part, USocketComponent *socket = nullptr, UPlugComponent *plug = nullptr, bool isDead = false, bool logicalOnly = true);
+    
 protected:
     
     /** The root part of the Bot */
@@ -33,28 +45,16 @@ protected:
     /** Override to support ConstructionScript Bot */
     virtual void PreInitializeComponents() override;
     
-    /** Recursive function to parse and assemble parts */
-    bool AssemblePart(ABotPart &part, TArray<ABotPart*> *parts = nullptr);
-
-    /** Recursive function to parse and reset parts */
-    void ResetPart(ABotPart &part);
-    
-    /** Connect a part properly */
-    void ConnectPart(ABotPart &part, USocketComponent *socket = nullptr, UPlugComponent *plug = nullptr);
-    
-    /** Destroy a part properly */
-    void DestroyPart(ABotPart &part);
+public:
     
     /** Recursive function to break sockets constraint */
     void BreakSocket(USocketComponent& socket, bool destroyChild, bool recursive);
     
-    /** Disconnect a part properly */
-    void DisconnectPart(ABotPart &part, USocketComponent *socket = nullptr, UPlugComponent *plug = nullptr, bool isDead = false);
-    
     /** Try to parse all parts and build Bot instance (assemble/connect) */
     bool Rebuild();
     
-public:
+    /** Destroy a part properly */
+    void DestroyPart(ABotPart &part);
     
     /** Reset bot and parts */
     UFUNCTION(BlueprintCallable)
@@ -80,7 +80,7 @@ public:
     /** Break a socket or all sockets based on name.
      */
     UFUNCTION(BlueprintCallable, Category="CardBot")
-    ABot* BreakSocket(FName name, bool all = true, bool recursive = false);
+    ABot* BreakSocket(FName name, bool recursive = false);
     
     /** Helper to get a component from its name */
     UFUNCTION(BlueprintCallable)
