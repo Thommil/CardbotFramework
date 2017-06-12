@@ -99,18 +99,6 @@ public:
     
     /** Called after a BotPart has been removed */
     UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
-    void OnPartHit(ABotPart* part, UCollisionEventData *collisionEventData);
-    
-    /** Called after a BotPart has been removed */
-    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
-    void OnPartBeginOverlap(ABotPart* part, AActor * OtherActor);
-    
-    /** Called after a BotPart has been removed */
-    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
-    void OnPartEndOverlap(ABotPart* part, AActor * OtherActor);
-    
-    /** Called after a BotPart has been removed */
-    UFUNCTION(BlueprintImplementableEvent, Category="CardBot")
     void OnPartBroken(ABotPart* part);
     
     /** Handles sensor events sent from parts */

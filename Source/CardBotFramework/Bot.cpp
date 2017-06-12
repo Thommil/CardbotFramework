@@ -385,18 +385,18 @@ void ABot::NotifyOnSensorEvent(ESensorType sensorType, FName eventName, ABotPart
     {
         case EFNameIndex::OnPartHit :
         {
-            UCollisionEventData* data = static_cast<UCollisionEventData*>(eventData);
-            OnPartHit(part, data);
+            UCollisionEventData* collisionEventData = static_cast<UCollisionEventData*>(eventData);
+            NotifyHit(collisionEventData->PartComponent, collisionEventData->OtherActor, collisionEventData->OtherComponent, collisionEventData->bSelfMoved, collisionEventData->HitLocation, collisionEventData->HitNormal, collisionEventData->NormalImpulse, collisionEventData->Hit);
             break;
         }
         case EFNameIndex::OnPartBeginOverlap :
         {
-            OnPartBeginOverlap(part, static_cast<AActor*>(eventData));
+            NotifyActorBeginOverlap(static_cast<AActor*>(eventData));
             break;
         }
         case EFNameIndex::OnPartEndOverlap :
         {
-            OnPartEndOverlap(part, static_cast<AActor*>(eventData));
+            NotifyActorEndOverlap(static_cast<AActor*>(eventData));
             break;
         }
         case EFNameIndex::OnPartDamage :
