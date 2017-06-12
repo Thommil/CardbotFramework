@@ -109,16 +109,16 @@ protected:
     
     TArray<T*> InnerQueue;
     
+    /** Object creator to override for specific constructor implementation */
+    virtual T* InstanciateObject()
+    {
+        return NewObject<T>(GetTransientPackage(), T::StaticClass());
+    }
+    
 public:
     
     /** Size of Pool */
     int32 Size;
-    
-    /** Object creator to override for specific constructor implementation */
-    virtual T* InstanciateObject()
-    {
-        return NewObject<T>(GetTransientPackage());
-    }
     
     /** Object reset to override for specific reset implementation */
     virtual void ResetObject(T* object){}

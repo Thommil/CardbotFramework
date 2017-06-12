@@ -83,16 +83,30 @@ USocketComponent* UPlugComponent::GetSocket() {
     return Socket;
 }
 
-
-//Init Pools
-TObjectPool<UCollisionEventData> ABotPart::CollisionEventDataPool = TObjectPool<UCollisionEventData>(DEFAULT_COLLISIONEVENTDATA_POOL_SIZE);
-TObjectPool<UDamageEventData> ABotPart::DamageEventDataPool = TObjectPool<UDamageEventData>(DEFAULT_DAMAGEEVENTDATA_POOL_SIZE);
-
 ABotPart::ABotPart()
 {
     LifeRate = 1.0f;
     bBreakOnDeath = true;
 	PrimaryActorTick.bCanEverTick = true;
+}
+
+void ABotPart::PostInitProperties()
+{
+    Super::PostInitProperties();
+    if(bCanBeDamaged)
+    {
+        CollisionEventDataPool = MakeShareable(new TObjectPool<UCollisionEventData>());
+    }
+    TArray<UActorComponent*> components = this->GetComponentsByClass(UPrimitiveComponent::StaticClass());
+    for (UActorComponent* component : components)
+    {
+        UPrimitiveComponent* primitiveComponent = static_cast<UPrimitiveComponent*>(component);
+        if(primitiveComponent->BodyInstance.bNotifyRigidBodyCollision)
+        {
+            DamageEventDataPool = MakeShareable(new TObjectPool<UDamageEventData>());
+            break;
+        }
+    }
 }
 
 UActorComponent* ABotPart::GetComponentByName(FName name) const
@@ -167,47 +181,43 @@ UPlugComponent* ABotPart::GetPlug(FName name) const
 
 void ABotPart::NotifyOnSocketConnected(USocketComponent *socket)
 {
-    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketConnected")), socket);
     OnSocketConnected(socket);
 }
 
 void ABotPart::NotifyOnSocketBroken(USocketComponent *socket)
 {
-    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnSocketBroken")), socket);
     OnSocketBroken(socket);
 }
 
 void ABotPart::NotifyOnPlugConnected(UPlugComponent *plug)
 {
-    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugConnected")), plug);
     OnPlugConnected(plug);
 }
 
 void ABotPart::NotifyOnPlugBroken(UPlugComponent *plug)
 {
-    GenerateSensorEvent(ESensorType::System, FName(TEXT("OnPlugBroken")), plug);
     OnPlugBroken(plug);
 }
 
 void ABotPart::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
 {
     Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
-    UCollisionEventData *CollisionEventData = ABotPart::CollisionEventDataPool.Pop();
+    UCollisionEventData *CollisionEventData = CollisionEventDataPool->Pop();
     CollisionEventData->SetEventData(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
-    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnHit")), CollisionEventData);
-    ABotPart::CollisionEventDataPool.Push(CollisionEventData);
+    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnPartHit"), EFNameIndex::OnPartHit), CollisionEventData);
+    CollisionEventDataPool->Push(CollisionEventData);
 }
 
 void ABotPart::NotifyActorBeginOverlap(AActor * OtherActor)
 {
     Super::NotifyActorBeginOverlap(OtherActor);
-    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnActorBeginOverlap")), OtherActor);
+    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnPartBeginOverlap"), EFNameIndex::OnPartBeginOverlap), OtherActor);
 }
 
 void ABotPart::NotifyActorEndOverlap(AActor * OtherActor)
 {
     Super::NotifyActorEndOverlap(OtherActor);
-    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnActorEndOverlap")), OtherActor);
+    GenerateSensorEvent(ESensorType::Collision, FName(TEXT("OnPartEndOverlap"), EFNameIndex::OnPartEndOverlap), OtherActor);
 }
 
 float ABotPart::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -215,16 +225,16 @@ float ABotPart::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
     float finalDamageAmount = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
     if(bCanBeDamaged)
     {
-        UDamageEventData *DamageEventData = ABotPart::DamageEventDataPool.Pop();
+        UDamageEventData *DamageEventData = DamageEventDataPool->Pop();
         DamageEventData->SetEventData(finalDamageAmount, DamageEvent, EventInstigator, DamageCauser);
-        GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnTakeDamage")), DamageEventData);
-        ABotPart::DamageEventDataPool.Push(DamageEventData);
+        GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnPartDamage"), EFNameIndex::OnPartDamage), DamageEventData);
+        DamageEventDataPool->Push(DamageEventData);
         
         LifeRate -= finalDamageAmount;
         
         if(LifeRate <= 0)
         {
-            GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnDie")), this);
+            GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnPartBroken"), EFNameIndex::OnPartBroken), this);
         }
     }
     return finalDamageAmount;

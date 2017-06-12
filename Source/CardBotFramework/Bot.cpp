@@ -381,36 +381,60 @@ void ABot::NotifyOnPartRemoved(ABotPart* part)
 
 void ABot::NotifyOnSensorEvent(ESensorType sensorType, FName eventName, ABotPart* part, UObject* eventData)
 {
-    if(eventName == FName(TEXT("OnTakeDamage")))
+    switch(eventName.GetNumber())
     {
-        UDamageEventData* DamageEventData = static_cast<UDamageEventData*>(eventData);
-        TakeDamage(DamageEventData->DamageAmount,DamageEventData->DamageEvent,DamageEventData->EventInstigator,DamageEventData->DamageCauser);
-    }
-    else if(eventName == FName(TEXT("OnDie")))
-    {
-        DisconnectPart(*part, nullptr, nullptr, true);
-        
-        if(part->bBreakOnDeath)
+        case EFNameIndex::OnPartHit :
         {
-            TArray<USocketComponent*> sockets;
-            part->GetSockets(sockets);
-            
-            for(USocketComponent* socket : sockets)
+            UCollisionEventData* data = static_cast<UCollisionEventData*>(eventData);
+            OnPartHit(part, data);
+            break;
+        }
+        case EFNameIndex::OnPartBeginOverlap :
+        {
+            OnPartBeginOverlap(part, static_cast<AActor*>(eventData));
+            break;
+        }
+        case EFNameIndex::OnPartEndOverlap :
+        {
+            OnPartEndOverlap(part, static_cast<AActor*>(eventData));
+            break;
+        }
+        case EFNameIndex::OnPartDamage :
+        {
+            UDamageEventData* DamageEventData = static_cast<UDamageEventData*>(eventData);
+            TakeDamage(DamageEventData->DamageAmount,DamageEventData->DamageEvent,DamageEventData->EventInstigator,DamageEventData->DamageCauser);
+            break;
+        }
+        case EFNameIndex::OnPartBroken :
+        {
+            DisconnectPart(*part, nullptr, nullptr, true);
+            if(part->bBreakOnDeath)
             {
-                BreakSocket(*socket, false, false);
-            }
-            
-            TArray<UPlugComponent*> plugs;
-            part->GetPlugs(plugs);
-            
-            for(UPlugComponent* plug : plugs)
-            {
-                if(plug->GetSocket() != nullptr)
+                TArray<USocketComponent*> sockets;
+                part->GetSockets(sockets);
+                
+                for(USocketComponent* socket : sockets)
                 {
-                    BreakSocket(*(plug->GetSocket()), false, false);
+                    BreakSocket(*socket, false, false);
+                }
+                
+                TArray<UPlugComponent*> plugs;
+                part->GetPlugs(plugs);
+                
+                for(UPlugComponent* plug : plugs)
+                {
+                    if(plug->GetSocket() != nullptr)
+                    {
+                        BreakSocket(*(plug->GetSocket()), false, false);
+                    }
                 }
             }
+            OnPartBroken(part);
+            break;
+        }
+        default:
+        {
+            OnSensorEvent(sensorType, eventName, part, eventData);
         }
     }
-    OnSensorEvent(sensorType, eventName, part, eventData);
 }

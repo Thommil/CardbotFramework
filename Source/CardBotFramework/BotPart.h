@@ -2,8 +2,7 @@
 
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "GameFramework/Actor.h"
-#include "Action.h"
-#include "Sensor.h"
+#include "Constants.h"
 #include "ObjectPool.h"
 #include "CollisionEventData.h"
 #include "DamageEventData.h"
@@ -108,8 +107,8 @@ public:
 	ABotPart();
 
 private:
-    static TObjectPool<UCollisionEventData> CollisionEventDataPool;
-    static TObjectPool<UDamageEventData> DamageEventDataPool;
+    TSharedPtr<TObjectPool<UCollisionEventData>> CollisionEventDataPool;
+    TSharedPtr<TObjectPool<UDamageEventData>> DamageEventDataPool;
     
 public:
     
@@ -126,7 +125,7 @@ public:
     bool bBreakOnDeath;
     
     /** Dynamic multicast delegate used to send sensor events to bot */
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSensorEventSignature, ESensorType, sensorType, FName, eventName, ABotPart*, part, UObject*, sensorData);
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSensorEventSignature, ESensorType, sensorType, FName, eventName, ABotPart*, part, UObject*, eventData);
     FOnSensorEventSignature OnSensorEventDelegate;
     
     /** Helper to get a component from its name */
@@ -196,6 +195,9 @@ public:
     
     /** Reroute PlugBroken event on Bot */
     UFUNCTION() virtual void NotifyOnPlugBroken(UPlugComponent *plug);
+    
+    /** Override to setup custom beahviour depending on properties */
+    virtual void PostInitProperties() override;
     
     /** Override Hit mechanism to reroute on Bot */
     virtual void NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit) override;
