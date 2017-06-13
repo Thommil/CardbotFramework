@@ -196,8 +196,8 @@ public:
     /** Reroute PlugBroken event on Bot */
     UFUNCTION() virtual void NotifyOnPlugBroken(UPlugComponent *plug);
     
-    /** Override to setup custom beahviour depending on properties */
-    virtual void PostInitProperties() override;
+    /** Override to set up pools */
+    virtual void PostInitializeComponents() override;
     
     /** Override Hit mechanism to reroute on Bot */
     virtual void NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit) override;

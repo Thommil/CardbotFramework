@@ -90,12 +90,12 @@ ABotPart::ABotPart()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void ABotPart::PostInitProperties()
+void ABotPart::PostInitializeComponents()
 {
-    Super::PostInitProperties();
+    Super::PostInitializeComponents();
     if(bCanBeDamaged)
     {
-        CollisionEventDataPool = MakeShareable(new TObjectPool<UCollisionEventData>());
+        DamageEventDataPool = MakeShareable(new TObjectPool<UDamageEventData>());
     }
     TArray<UActorComponent*> components = this->GetComponentsByClass(UPrimitiveComponent::StaticClass());
     for (UActorComponent* component : components)
@@ -103,7 +103,7 @@ void ABotPart::PostInitProperties()
         UPrimitiveComponent* primitiveComponent = static_cast<UPrimitiveComponent*>(component);
         if(primitiveComponent->BodyInstance.bNotifyRigidBodyCollision)
         {
-            DamageEventDataPool = MakeShareable(new TObjectPool<UDamageEventData>());
+            CollisionEventDataPool = MakeShareable(new TObjectPool<UCollisionEventData>());
             break;
         }
     }
@@ -234,7 +234,7 @@ float ABotPart::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, 
         
         if(LifeRate <= 0)
         {
-            GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnPartBroken"), EFNameIndex::OnPartBroken), this);
+            GenerateSensorEvent(ESensorType::Damage, FName(TEXT("OnPartBroken"), EFNameIndex::OnPartBroken), nullptr);
         }
     }
     return finalDamageAmount;

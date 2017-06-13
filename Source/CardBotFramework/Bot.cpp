@@ -18,6 +18,7 @@ ABot::ABot()
 
 void ABot::PreInitializeComponents()
 {
+    Super::PreInitializeComponents();
     //For Editor mode
     if(RootPart == nullptr)
     {
@@ -299,7 +300,7 @@ void ABot::DisconnectPart(ABotPart &part, USocketComponent *socket, UPlugCompone
             UPlugComponent *childPlug = childSocket->GetPlug();
             if(childPlug != nullptr)
             {
-                DisconnectPart(*(static_cast<ABotPart *>(plug->GetOwner())), childSocket, childPlug);
+                DisconnectPart(*(static_cast<ABotPart *>(childPlug->GetOwner())), childSocket, childPlug);
             }
         }
         
